@@ -14,7 +14,7 @@ load_dotenv()
 
 
 async def detect_target_file(file: UploadFile, range_id: int):
-    UPLOAD_DIR = getenv("UPLOAD_DIR")
+    UPLOAD_DIR = getenv("UPLOAD_DIR", "uploads")
     makedirs(UPLOAD_DIR, exist_ok=True)
     file_location = f"{UPLOAD_DIR}/{range_id}.jpeg"
     with open(file_location, "wb") as buffer:
@@ -38,7 +38,7 @@ async def detect_target_file(file: UploadFile, range_id: int):
         )
 
     result = jsonable_encoder(scores)
-    return JSONResponse(content=scores)
+    return JSONResponse(content=result)
 
 
 async def insert_arrows_to_staging(ends_info):

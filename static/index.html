@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Archery Scoring App - Professional Athlete Tracker</title>
+  <meta name="description" content="Professional archery scoring application with manual scoring and AI computer vision target detection.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js for progression visualizer -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="brand" id="navHomeBtn">
+      <span class="target-icon"></span>
+      <span>Archery Score Pro</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-secondary" id="btnManageAthletes">
+        <span>🏹 Athletes</span>
+      </button>
+      <button class="btn btn-primary" id="btnNewSessionTop">
+        <span>+ New Session</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="container">
+
+    <!-- 1. HOME SCREEN -->
+    <section id="viewHome" class="view-section">
+      <div class="hero-banner">
+        <h1>Precision Archery Scoring</h1>
+        <p>Record your practice and tournament ends with instant analytics and optional AI target detection.</p>
+      </div>
+
+      <div class="action-grid">
+        <div class="action-card" id="cardStartTraining">
+          <div class="action-card-header">
+            <h3>Training Session</h3>
+            <div class="action-icon">🎯</div>
+          </div>
+          <p>Practice ends, test groupings, and track your arrow consistency with live statistics.</p>
+          <div style="margin-top: 1rem;">
+            <button class="btn btn-primary" style="width: 100%;">Start Practice</button>
+          </div>
+        </div>
+
+        <div class="action-card comp" id="cardStartCompetition">
+          <div class="action-card-header">
+            <h3>Competition Round</h3>
+            <div class="action-icon">🏆</div>
+          </div>
+          <p>Official 72-arrow / 36-arrow scoring with strict ends tracking and World Archery rules.</p>
+          <div style="margin-top: 1rem;">
+            <button class="btn btn-secondary" style="width: 100%; border-color: var(--ring-red); color: #f87171;">Start Round</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <h2>Recent Sessions</h2>
+        <span id="sessionCountBadge" style="color: var(--text-muted); font-size: 0.9rem;">0 sessions</span>
+      </div>
+
+      <div id="recentSessionsList" class="sessions-list">
+        <div style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading sessions...</div>
+      </div>
+    </section>
+
+    <!-- 2. SCORING SCREEN -->
+    <section id="viewScoring" class="view-section hidden">
+      <!-- Session Header Bar -->
+      <div class="card" style="padding: 1rem 1.25rem; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <span id="scoreAthleteName" style="font-weight: 700; font-size: 1.15rem; color: #fff;">Athlete Name</span>
+            <span id="scoreSessionBadge" class="session-badge badge-training" style="margin-left: 0.5rem;">Recurve</span>
+            <div id="scoreSessionMeta" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">70m • 6 Arrows/End</div>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary" id="btnAbandonSession" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Exit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Dashboard -->
+      <div class="scoring-dashboard">
+        <div class="metric-card">
+          <div class="metric-label">Current End</div>
+          <div class="metric-value gold" id="scoreCurrentEnd">End 1 / 10</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">End Total</div>
+          <div class="metric-value" id="scoreEndTotal">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">End X</div>
+          <div class="metric-value gold" id="scoreEndX">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Session Total</div>
+          <div class="metric-value" id="scoreSessionTotal">0</div>
+        </div>
+      </div>
+
+      <!-- Arrow Slots Display -->
+      <div class="arrows-slots-container">
+        <div class="slots-header">
+          <span style="font-weight: 600;">Arrow Entries</span>
+          <span id="slotProgressText" style="color: var(--text-secondary);">Tap arrow slot to edit</span>
+        </div>
+        <div class="arrow-slots-list" id="arrowSlotsContainer">
+          <!-- Slots rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Fast Tactile Keypad -->
+      <div class="keypad-grid">
+        <button class="keypad-btn key-x" data-val="X">X</button>
+        <button class="keypad-btn key-10" data-val="10">10</button>
+        <button class="keypad-btn key-9" data-val="9">9</button>
+        <button class="keypad-btn key-m" data-val="M">M</button>
+
+        <button class="keypad-btn key-8" data-val="8">8</button>
+        <button class="keypad-btn key-7" data-val="7">7</button>
+        <button class="keypad-btn key-6" data-val="6">6</button>
+        <button class="keypad-btn key-5" data-val="5">5</button>
+
+        <button class="keypad-btn key-4" data-val="4">4</button>
+        <button class="keypad-btn key-3" data-val="3">3</button>
+        <button class="keypad-btn key-2" data-val="2">2</button>
+        <button class="keypad-btn key-1" data-val="1">1</button>
+      </div>
+
+      <!-- Action Row -->
+      <div class="end-action-bar">
+        <button class="btn btn-secondary" id="btnUndoArrow" style="flex: 1;">
+          <span>⌫ Undo</span>
+        </button>
+        <button class="btn btn-ai" id="btnTriggerAiScan" style="flex: 1.5;">
+          <span>📸 AI Scan Target</span>
+        </button>
+        <button class="btn btn-primary" id="btnSubmitEnd" style="flex: 1.5;">
+          <span>Save End ➔</span>
+        </button>
+      </div>
+
+      <!-- Previous Ends Accordion in current session -->
+      <div class="card" style="margin-top: 1.5rem;">
+        <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Scorecard for this Session</h3>
+        <div style="overflow-x: auto;">
+          <table class="score-table">
+            <thead>
+              <tr>
+                <th>End</th>
+                <th>Arrows</th>
+                <th>Score</th>
+                <th>X</th>
+                <th>Running Total</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="liveScorecardBody">
+              <tr><td colspan="6" style="color: var(--text-muted);">No completed ends yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SESSION SUMMARY SCREEN -->
+    <section id="viewSummary" class="view-section hidden">
+      <div class="card" style="text-align: center; border-color: var(--ring-gold); background: rgba(245, 158, 11, 0.04);">
+        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">Session Complete! 🎉</h2>
+        <p id="summaryAthleteInfo" style="color: var(--text-secondary);">Arjuna • Recurve • 70m</p>
+      </div>
+
+      <!-- Statistics Dashboard -->
+      <div class="scoring-dashboard">
+        <div class="metric-card">
+          <div class="metric-label">Final Score</div>
+          <div class="metric-value gold" id="sumFinalScore">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Total X</div>
+          <div class="metric-value gold" id="sumTotalX">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Average / Arrow</div>
+          <div class="metric-value" id="sumAvgArrow">0.0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Average / End</div>
+          <div class="metric-value" id="sumAvgEnd">0.0</div>
+        </div>
+      </div>
+
+      <!-- Highlights Card -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-around; text-align: center;">
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Highest End</div>
+            <div id="sumHighestEnd" style="font-size: 1.4rem; font-weight: 700; color: var(--accent-green);">--</div>
+          </div>
+          <div style="border-left: 1px solid var(--border-color);"></div>
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Lowest End</div>
+            <div id="sumLowestEnd" style="font-size: 1.4rem; font-weight: 700; color: #f87171;">--</div>
+          </div>
+          <div style="border-left: 1px solid var(--border-color);"></div>
+          <div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Total Arrows</div>
+            <div id="sumTotalArrows" style="font-size: 1.4rem; font-weight: 700;">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score Progression Chart -->
+      <div class="card">
+        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Score Progression</h3>
+        <div class="chart-container">
+          <canvas id="progressionChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Detailed Scorecard -->
+      <div class="card">
+        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Official End-by-End Scorecard</h3>
+        <div style="overflow-x: auto;">
+          <table class="score-table">
+            <thead>
+              <tr>
+                <th>End</th>
+                <th>Arrows</th>
+                <th>End Total</th>
+                <th>X</th>
+                <th>Cumulative</th>
+              </tr>
+            </thead>
+            <tbody id="summaryScorecardBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+        <button class="btn btn-secondary" id="btnBackHomeFromSummary" style="flex: 1;">Back to Home</button>
+        <button class="btn btn-primary" id="btnNewSessionFromSummary" style="flex: 1;">Start Another Session</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: CREATE SESSION -->
+  <div class="modal-overlay hidden" id="modalCreateSession">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalSessionTitle">Create Scoring Session</h3>
+        <button class="close-btn" id="btnCloseCreateSession">&times;</button>
+      </div>
+      <form id="formCreateSession">
+        <div class="form-group">
+          <label class="form-label">Athlete</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <select class="form-select" id="selectAthlete" required style="flex: 1;">
+              <option value="">Select an athlete...</option>
+            </select>
+            <button type="button" class="btn btn-secondary" id="btnOpenNewAthleteModal">+ Add</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Bow Category</label>
+          <select class="form-select" id="selectBowCategory" required>
+            <option value="Recurve">Recurve</option>
+            <option value="Compound">Compound</option>
+            <option value="Barebow">Barebow</option>
+            <option value="Standard Bow / National">Standard Bow / National</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Session Type</label>
+          <select class="form-select" id="selectSessionType">
+            <option value="training">Training</option>
+            <option value="competition">Competition</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Distance</label>
+          <select class="form-select" id="selectDistance">
+            <option value="70m">70 meters (Olympic Recurve)</option>
+            <option value="50m">50 meters (Compound / Barebow)</option>
+            <option value="30m">30 meters (Short distance)</option>
+            <option value="18m">18 meters (Indoor WA)</option>
+            <option value="Custom">Custom Distance</option>
+          </select>
+          <input type="text" class="form-input hidden" id="inputCustomDistance" placeholder="e.g. 40m" style="margin-top: 0.5rem;">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Arrows per End</label>
+            <select class="form-select" id="selectArrowsPerEnd">
+              <option value="6" selected>6 Arrows</option>
+              <option value="3">3 Arrows</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Number of Ends</label>
+            <input type="number" class="form-input" id="inputTotalEnds" value="10" min="1" max="50" required>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Start Scoring Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD ATHLETE -->
+  <div class="modal-overlay hidden" id="modalAddAthlete">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Register Athlete</h3>
+        <button class="close-btn" id="btnCloseAddAthlete">&times;</button>
+      </div>
+      <form id="formAddAthlete">
+        <div class="form-group">
+          <label class="form-label">Athlete Full Name</label>
+          <input type="text" class="form-input" id="inputAthleteName" placeholder="e.g. Arjuna Pratama" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Athlete ID / Code (Optional)</label>
+          <input type="text" class="form-input" id="inputAthleteCode" placeholder="e.g. ARC-001">
+        </div>
+        <div style="margin-top: 1.25rem;">
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Save Athlete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: AI TARGET SCAN & CONFIRMATION -->
+  <div class="modal-overlay hidden" id="modalAiScan">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 class="modal-title">AI Target & Arrow Detection</h3>
+        <button class="close-btn" id="btnCloseAiScan">&times;</button>
+      </div>
+      <div>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
+          Upload or take a photo of your target face. The AI detects the target rings and estimates each arrow's score based on impact position. You can confirm or correct the scores before applying.
+        </p>
+
+        <div style="margin-bottom: 1.25rem;">
+          <input type="file" id="targetImageInput" accept="image/*" class="form-input" capture="environment">
+        </div>
+
+        <div id="aiScanLoading" class="hidden" style="text-align: center; padding: 1.5rem; color: var(--ring-gold);">
+          <div>Detecting target rings and arrows...</div>
+        </div>
+
+        <div id="aiScanResults" class="hidden">
+          <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">Detected Arrows</h4>
+          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+            Review each score below. Click any score chip to edit before confirming:
+          </p>
+          <div id="aiDetectedChips" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+            <!-- Rendered detected arrow chips -->
+          </div>
+
+          <div style="display: flex; gap: 0.75rem;">
+            <button type="button" class="btn btn-secondary" id="btnCancelAiScan" style="flex: 1;">Cancel</button>
+            <button type="button" class="btn btn-primary" id="btnApplyAiScores" style="flex: 1.5;">Confirm & Apply Scores</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

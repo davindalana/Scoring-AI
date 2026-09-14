@@ -27,7 +27,7 @@ class ArrowStagingPayload(BaseModel):
         return v
 
 
-tag = "scores-detaction"
+tag = "scores-detection"
 router_prefix = "archer"
 router = APIRouter(tags=[tag])
 
