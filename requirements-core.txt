@@ -1,0 +1,5 @@
+pytest
+fastapi[standard]
+aiomysql
+cryptography
+pydantic

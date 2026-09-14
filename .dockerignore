@@ -1,0 +1,15 @@
+.git
+*.md
+.cache
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+.DS_Store
+.env
+.env.local
+.vscode/
+.idea/
+*.log
+coverage.xml
+htmlcov/
