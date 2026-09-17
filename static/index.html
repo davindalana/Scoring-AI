@@ -3,29 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Archery Scoring App - Professional Athlete Tracker</title>
-  <meta name="description" content="Professional archery scoring application with manual scoring and AI computer vision target detection.">
+  <title>Archery Score Pro - Olympic Athlete Scoring & AI Target Detection</title>
+  <meta name="description" content="Professional archery scoring application with interactive Olympic target face, tactile scoring keypad, and AI target detection.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Chart.js for progression visualizer -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 
+  <!-- Floating Toast Notification System -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
   <!-- Navigation Bar -->
   <header class="navbar">
-    <div class="brand" id="navHomeBtn">
+    <div class="brand" id="navHomeBtn" role="button" tabindex="0" title="Return to Home">
       <span class="target-icon"></span>
-      <span>Archery Score Pro</span>
+      <span class="brand-text">Archery Score <span class="gold-text">Pro</span></span>
     </div>
     <div class="nav-actions">
-      <button class="btn btn-secondary" id="btnManageAthletes">
-        <span>🏹 Athletes</span>
+      <button class="btn btn-secondary" id="btnManageAthletes" title="Manage registered athletes">
+        <span class="btn-icon">🎯</span>
+        <span>Athletes</span>
       </button>
-      <button class="btn btn-primary" id="btnNewSessionTop">
-        <span>+ New Session</span>
+      <button class="btn btn-primary" id="btnNewSessionTop" title="Start a new scoring session">
+        <span class="btn-icon">+</span>
+        <span>New Session</span>
       </button>
     </div>
   </header>
@@ -33,66 +38,101 @@
   <!-- Main Content Container -->
   <main class="container">
 
+    <!-- ============================================== -->
     <!-- 1. HOME SCREEN -->
+    <!-- ============================================== -->
     <section id="viewHome" class="view-section">
       <div class="hero-banner">
-        <h1>Precision Archery Scoring</h1>
-        <p>Record your practice and tournament ends with instant analytics and optional AI target detection.</p>
+        <div class="hero-badge">World Archery Standards</div>
+        <h1>Precision Scoring & Analytics</h1>
+        <p>Tactile range entry, interactive 10-ring Olympic target visualizer, and instant session statistics.</p>
       </div>
 
       <div class="action-grid">
-        <div class="action-card" id="cardStartTraining">
+        <div class="action-card" id="cardStartTraining" role="button" tabindex="0">
           <div class="action-card-header">
-            <h3>Training Session</h3>
-            <div class="action-icon">🎯</div>
+            <div>
+              <h3>Training Session</h3>
+              <p class="action-card-sub">Practice ends, grouping tests & consistency stats</p>
+            </div>
+            <div class="action-icon gold-icon">🎯</div>
           </div>
-          <p>Practice ends, test groupings, and track your arrow consistency with live statistics.</p>
-          <div style="margin-top: 1rem;">
-            <button class="btn btn-primary" style="width: 100%;">Start Practice</button>
+          <div class="card-action-btn">
+            <button class="btn btn-primary w-100">Start Practice ➔</button>
           </div>
         </div>
 
-        <div class="action-card comp" id="cardStartCompetition">
+        <div class="action-card comp" id="cardStartCompetition" role="button" tabindex="0">
           <div class="action-card-header">
-            <h3>Competition Round</h3>
-            <div class="action-icon">🏆</div>
+            <div>
+              <h3>Competition Round</h3>
+              <p class="action-card-sub">Official 72 / 36 arrow tournament round</p>
+            </div>
+            <div class="action-icon red-icon">🏆</div>
           </div>
-          <p>Official 72-arrow / 36-arrow scoring with strict ends tracking and World Archery rules.</p>
-          <div style="margin-top: 1rem;">
-            <button class="btn btn-secondary" style="width: 100%; border-color: var(--ring-red); color: #f87171;">Start Round</button>
+          <div class="card-action-btn">
+            <button class="btn btn-secondary comp-btn w-100">Start Round ➔</button>
           </div>
         </div>
       </div>
 
-      <div class="section-title">
-        <h2>Recent Sessions</h2>
-        <span id="sessionCountBadge" style="color: var(--text-muted); font-size: 0.9rem;">0 sessions</span>
+      <!-- Recent Sessions Section with Filters & Search -->
+      <div class="sessions-header-row">
+        <div class="section-title">
+          <h2>Recent Sessions</h2>
+          <span id="sessionCountBadge" class="count-badge">0 sessions</span>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="inputSearchSessions" class="search-input" placeholder="Search athlete or bow...">
+          </div>
+          <div class="tab-pills">
+            <button class="tab-pill active" data-filter="all">All</button>
+            <button class="tab-pill" data-filter="in_progress">In Progress</button>
+            <button class="tab-pill" data-filter="completed">Completed</button>
+          </div>
+        </div>
       </div>
 
       <div id="recentSessionsList" class="sessions-list">
-        <div style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading sessions...</div>
+        <div class="empty-state">Loading sessions...</div>
       </div>
     </section>
 
+    <!-- ============================================== -->
     <!-- 2. SCORING SCREEN -->
+    <!-- ============================================== -->
     <section id="viewScoring" class="view-section hidden">
       <!-- Session Header Bar -->
-      <div class="card" style="padding: 1rem 1.25rem; margin-bottom: 1rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-          <div>
-            <span id="scoreAthleteName" style="font-weight: 700; font-size: 1.15rem; color: #fff;">Athlete Name</span>
-            <span id="scoreSessionBadge" class="session-badge badge-training" style="margin-left: 0.5rem;">Recurve</span>
-            <div id="scoreSessionMeta" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">70m • 6 Arrows/End</div>
+      <div class="session-info-bar card">
+        <div class="session-info-left">
+          <div class="athlete-display">
+            <span class="athlete-avatar" id="scoreAthleteAvatar">A</span>
+            <div>
+              <div class="athlete-title-wrap">
+                <span id="scoreAthleteName" class="athlete-name-text">Athlete Name</span>
+                <span id="scoreSessionBadge" class="session-badge badge-recurve">Recurve</span>
+              </div>
+              <div id="scoreSessionMeta" class="session-meta-text">70m • 6 Arrows/End • Training</div>
+            </div>
           </div>
-          <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-secondary" id="btnAbandonSession" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Exit</button>
-          </div>
+        </div>
+        <div class="session-info-actions">
+          <button class="btn btn-sm btn-secondary" id="btnToggleTargetFace" title="Toggle Target Face View">
+            <span id="targetToggleIcon">🎯</span> <span id="targetToggleText">Hide Target</span>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" id="btnAbandonSession" title="Exit session">
+            Exit
+          </button>
         </div>
       </div>
 
       <!-- Live Dashboard -->
       <div class="scoring-dashboard">
-        <div class="metric-card">
+        <div class="metric-card gold-glow">
           <div class="metric-label">Current End</div>
           <div class="metric-value gold" id="scoreCurrentEnd">End 1 / 10</div>
         </div>
@@ -108,54 +148,157 @@
           <div class="metric-label">Session Total</div>
           <div class="metric-value" id="scoreSessionTotal">0</div>
         </div>
-      </div>
-
-      <!-- Arrow Slots Display -->
-      <div class="arrows-slots-container">
-        <div class="slots-header">
-          <span style="font-weight: 600;">Arrow Entries</span>
-          <span id="slotProgressText" style="color: var(--text-secondary);">Tap arrow slot to edit</span>
-        </div>
-        <div class="arrow-slots-list" id="arrowSlotsContainer">
-          <!-- Slots rendered dynamically -->
+        <div class="metric-card live-stat-card">
+          <div class="metric-label">Running Avg</div>
+          <div class="metric-value" id="scoreRunningAvg">0.0</div>
         </div>
       </div>
 
-      <!-- Fast Tactile Keypad -->
-      <div class="keypad-grid">
-        <button class="keypad-btn key-x" data-val="X">X</button>
-        <button class="keypad-btn key-10" data-val="10">10</button>
-        <button class="keypad-btn key-9" data-val="9">9</button>
-        <button class="keypad-btn key-m" data-val="M">M</button>
+      <!-- Interactive Scoring Workspace (Split: SVG Target Face + Keypad) -->
+      <div class="scoring-workspace">
+        
+        <!-- Interactive Olympic Target Face -->
+        <div class="target-face-card card" id="targetFaceWrapper">
+          <div class="target-header">
+            <span class="target-card-title">Olympic Target Face</span>
+            <span class="target-hint">Tap any ring to score</span>
+          </div>
+          <div class="svg-target-container">
+            <svg id="olympicTargetSvg" viewBox="-130 -130 260 260" class="interactive-target">
+              <!-- Rings from outer to inner -->
+              <!-- Ring 1 (White) -->
+              <circle r="120" class="target-ring ring-1" data-val="1" cx="0" cy="0"></circle>
+              <!-- Ring 2 (White) -->
+              <circle r="108" class="target-ring ring-2" data-val="2" cx="0" cy="0"></circle>
+              <!-- Ring 3 (Black) -->
+              <circle r="96" class="target-ring ring-3" data-val="3" cx="0" cy="0"></circle>
+              <!-- Ring 4 (Black) -->
+              <circle r="84" class="target-ring ring-4" data-val="4" cx="0" cy="0"></circle>
+              <!-- Ring 5 (Blue) -->
+              <circle r="72" class="target-ring ring-5" data-val="5" cx="0" cy="0"></circle>
+              <!-- Ring 6 (Blue) -->
+              <circle r="60" class="target-ring ring-6" data-val="6" cx="0" cy="0"></circle>
+              <!-- Ring 7 (Red) -->
+              <circle r="48" class="target-ring ring-7" data-val="7" cx="0" cy="0"></circle>
+              <!-- Ring 8 (Red) -->
+              <circle r="36" class="target-ring ring-8" data-val="8" cx="0" cy="0"></circle>
+              <!-- Ring 9 (Gold) -->
+              <circle r="24" class="target-ring ring-9" data-val="9" cx="0" cy="0"></circle>
+              <!-- Ring 10 (Gold) -->
+              <circle r="12" class="target-ring ring-10" data-val="10" cx="0" cy="0"></circle>
+              <!-- Inner X ring (Gold Bullseye) -->
+              <circle r="6" class="target-ring ring-x" data-val="X" cx="0" cy="0"></circle>
+              <!-- Crosshair -->
+              <line x1="-5" y1="0" x2="5" y2="0" stroke="#000" stroke-width="0.8" opacity="0.7"></line>
+              <line x1="0" y1="-5" x2="0" y2="5" stroke="#000" stroke-width="0.8" opacity="0.7"></line>
+            </svg>
+          </div>
+          <div class="target-legend">
+            <span class="legend-chip gold-chip">Gold (X, 10, 9)</span>
+            <span class="legend-chip red-chip">Red (8, 7)</span>
+            <span class="legend-chip blue-chip">Blue (6, 5)</span>
+            <span class="legend-chip black-chip">Black (4, 3)</span>
+            <span class="legend-chip white-chip">White (2, 1)</span>
+          </div>
+        </div>
 
-        <button class="keypad-btn key-8" data-val="8">8</button>
-        <button class="keypad-btn key-7" data-val="7">7</button>
-        <button class="keypad-btn key-6" data-val="6">6</button>
-        <button class="keypad-btn key-5" data-val="5">5</button>
+        <!-- Input Panel: Arrow Slots & Keypad -->
+        <div class="scoring-input-panel">
+          
+          <!-- Arrow Slots Display -->
+          <div class="arrows-slots-container card">
+            <div class="slots-header">
+              <span class="slots-header-title">Arrow Entries</span>
+              <span id="slotProgressText" class="slots-header-hint">Tap slot to edit • Keys 1-10, X, M</span>
+            </div>
+            <div class="arrow-slots-list" id="arrowSlotsContainer">
+              <!-- Slots rendered dynamically -->
+            </div>
+            <!-- End completed banner indicator -->
+            <div id="endCompleteBanner" class="end-complete-banner hidden">
+              ✓ All arrows entered! Press <strong>Save End ➔</strong> or hit <strong>Enter</strong>
+            </div>
+          </div>
 
-        <button class="keypad-btn key-4" data-val="4">4</button>
-        <button class="keypad-btn key-3" data-val="3">3</button>
-        <button class="keypad-btn key-2" data-val="2">2</button>
-        <button class="keypad-btn key-1" data-val="1">1</button>
+          <!-- Fast Tactile Keypad -->
+          <div class="keypad-container">
+            <div class="keypad-grid">
+              <button class="keypad-btn key-x" data-val="X" title="Press X">
+                <span class="key-val">X</span>
+                <span class="key-sub">10 pts</span>
+              </button>
+              <button class="keypad-btn key-10" data-val="10" title="Press 0 or 10">
+                <span class="key-val">10</span>
+                <span class="key-sub">Gold</span>
+              </button>
+              <button class="keypad-btn key-9" data-val="9" title="Press 9">
+                <span class="key-val">9</span>
+                <span class="key-sub">Gold</span>
+              </button>
+              <button class="keypad-btn key-m" data-val="M" title="Press M">
+                <span class="key-val">M</span>
+                <span class="key-sub">Miss</span>
+              </button>
+
+              <button class="keypad-btn key-8" data-val="8" title="Press 8">
+                <span class="key-val">8</span>
+                <span class="key-sub">Red</span>
+              </button>
+              <button class="keypad-btn key-7" data-val="7" title="Press 7">
+                <span class="key-val">7</span>
+                <span class="key-sub">Red</span>
+              </button>
+              <button class="keypad-btn key-6" data-val="6" title="Press 6">
+                <span class="key-val">6</span>
+                <span class="key-sub">Blue</span>
+              </button>
+              <button class="keypad-btn key-5" data-val="5" title="Press 5">
+                <span class="key-val">5</span>
+                <span class="key-sub">Blue</span>
+              </button>
+
+              <button class="keypad-btn key-4" data-val="4" title="Press 4">
+                <span class="key-val">4</span>
+                <span class="key-sub">Black</span>
+              </button>
+              <button class="keypad-btn key-3" data-val="3" title="Press 3">
+                <span class="key-val">3</span>
+                <span class="key-sub">Black</span>
+              </button>
+              <button class="keypad-btn key-2" data-val="2" title="Press 2">
+                <span class="key-val">2</span>
+                <span class="key-sub">White</span>
+              </button>
+              <button class="keypad-btn key-1" data-val="1" title="Press 1">
+                <span class="key-val">1</span>
+                <span class="key-sub">White</span>
+              </button>
+            </div>
+
+            <!-- Action Row -->
+            <div class="end-action-bar">
+              <button class="btn btn-secondary" id="btnUndoArrow" title="Backspace">
+                <span>⌫ Undo</span>
+              </button>
+              <button class="btn btn-ai" id="btnTriggerAiScan" title="Upload target photo for AI detection">
+                <span>📸 AI Scan</span>
+              </button>
+              <button class="btn btn-primary" id="btnSubmitEnd" title="Press Enter">
+                <span>Save End ➔</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-      <!-- Action Row -->
-      <div class="end-action-bar">
-        <button class="btn btn-secondary" id="btnUndoArrow" style="flex: 1;">
-          <span>⌫ Undo</span>
-        </button>
-        <button class="btn btn-ai" id="btnTriggerAiScan" style="flex: 1.5;">
-          <span>📸 AI Scan Target</span>
-        </button>
-        <button class="btn btn-primary" id="btnSubmitEnd" style="flex: 1.5;">
-          <span>Save End ➔</span>
-        </button>
-      </div>
-
-      <!-- Previous Ends Accordion in current session -->
-      <div class="card" style="margin-top: 1.5rem;">
-        <h3 style="font-size: 1.05rem; margin-bottom: 0.75rem;">Scorecard for this Session</h3>
-        <div style="overflow-x: auto;">
+      <!-- Live Session Scorecard -->
+      <div class="card scorecard-card">
+        <div class="scorecard-header">
+          <h3>Scorecard (Live Round)</h3>
+          <span class="scorecard-sub">Tap "Edit" to adjust any arrow</span>
+        </div>
+        <div class="table-responsive">
           <table class="score-table">
             <thead>
               <tr>
@@ -168,23 +311,26 @@
               </tr>
             </thead>
             <tbody id="liveScorecardBody">
-              <tr><td colspan="6" style="color: var(--text-muted);">No completed ends yet.</td></tr>
+              <tr><td colspan="6" class="text-muted">No completed ends yet.</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
+    <!-- ============================================== -->
     <!-- 3. SESSION SUMMARY SCREEN -->
+    <!-- ============================================== -->
     <section id="viewSummary" class="view-section hidden">
-      <div class="card" style="text-align: center; border-color: var(--ring-gold); background: rgba(245, 158, 11, 0.04);">
-        <h2 style="font-size: 1.8rem; margin-bottom: 0.25rem;">Session Complete! 🎉</h2>
-        <p id="summaryAthleteInfo" style="color: var(--text-secondary);">Arjuna • Recurve • 70m</p>
+      <div class="summary-hero card">
+        <div class="summary-badge">Round Finished</div>
+        <h2>Session Complete! 🎉</h2>
+        <p id="summaryAthleteInfo" class="summary-meta">Athlete • Recurve • 70m</p>
       </div>
 
       <!-- Statistics Dashboard -->
       <div class="scoring-dashboard">
-        <div class="metric-card">
+        <div class="metric-card gold-glow">
           <div class="metric-label">Final Score</div>
           <div class="metric-value gold" id="sumFinalScore">0</div>
         </div>
@@ -203,38 +349,52 @@
       </div>
 
       <!-- Highlights Card -->
-      <div class="card">
-        <div style="display: flex; justify-content: space-around; text-align: center;">
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">Highest End</div>
-            <div id="sumHighestEnd" style="font-size: 1.4rem; font-weight: 700; color: var(--accent-green);">--</div>
-          </div>
-          <div style="border-left: 1px solid var(--border-color);"></div>
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">Lowest End</div>
-            <div id="sumLowestEnd" style="font-size: 1.4rem; font-weight: 700; color: #f87171;">--</div>
-          </div>
-          <div style="border-left: 1px solid var(--border-color);"></div>
-          <div>
-            <div style="font-size: 0.85rem; color: var(--text-secondary);">Total Arrows</div>
-            <div id="sumTotalArrows" style="font-size: 1.4rem; font-weight: 700;">0</div>
-          </div>
+      <div class="card highlights-card">
+        <div class="highlight-item">
+          <div class="highlight-label">Highest End</div>
+          <div id="sumHighestEnd" class="highlight-val green-text">--</div>
+        </div>
+        <div class="highlight-divider"></div>
+        <div class="highlight-item">
+          <div class="highlight-label">Lowest End</div>
+          <div id="sumLowestEnd" class="highlight-val red-text">--</div>
+        </div>
+        <div class="highlight-divider"></div>
+        <div class="highlight-item">
+          <div class="highlight-label">Total Arrows</div>
+          <div id="sumTotalArrows" class="highlight-val">0</div>
+        </div>
+        <div class="highlight-divider"></div>
+        <div class="highlight-item">
+          <div class="highlight-label">Gold % (10+X)</div>
+          <div id="sumGoldPercent" class="highlight-val gold">0%</div>
         </div>
       </div>
 
       <!-- Score Progression Chart -->
-      <div class="card">
-        <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Score Progression</h3>
+      <div class="card chart-card">
+        <div class="chart-header">
+          <h3>Score Progression & End Breakdown</h3>
+          <span class="text-secondary text-sm">Line: Cumulative Total • Bars: End Score</span>
+        </div>
         <div class="chart-container">
           <canvas id="progressionChart"></canvas>
         </div>
       </div>
 
-      <!-- Detailed Scorecard -->
-      <div class="card">
-        <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Official End-by-End Scorecard</h3>
-        <div style="overflow-x: auto;">
-          <table class="score-table">
+      <!-- Printable Official Scorecard -->
+      <div class="card scorecard-card" id="printableScorecardArea">
+        <div class="printable-header">
+          <div>
+            <h3>Official Scorecard</h3>
+            <p id="printSubMeta" class="text-secondary text-sm">World Archery Target Round</p>
+          </div>
+          <button class="btn btn-secondary no-print" id="btnPrintScorecard">
+            <span>🖨️ Print / Save PDF</span>
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="score-table printable-table">
             <thead>
               <tr>
                 <th>End</th>
@@ -250,36 +410,81 @@
         </div>
       </div>
 
-      <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-        <button class="btn btn-secondary" id="btnBackHomeFromSummary" style="flex: 1;">Back to Home</button>
-        <button class="btn btn-primary" id="btnNewSessionFromSummary" style="flex: 1;">Start Another Session</button>
+      <div class="summary-actions no-print">
+        <button class="btn btn-secondary flex-1" id="btnBackHomeFromSummary">Back to Home</button>
+        <button class="btn btn-primary flex-1" id="btnNewSessionFromSummary">Start Another Session</button>
       </div>
     </section>
 
   </main>
 
+  <!-- ============================================== -->
+  <!-- MODAL: ATHLETE MANAGEMENT & DIRECTORY -->
+  <!-- ============================================== -->
+  <div class="modal-overlay hidden" id="modalAthletes" role="dialog" aria-modal="true">
+    <div class="modal-content modal-md">
+      <div class="modal-header">
+        <div class="tab-pills" style="margin: 0;">
+          <button class="tab-pill active" id="tabAthleteList">Athletes Directory</button>
+          <button class="tab-pill" id="tabAthleteNew">+ Register New</button>
+        </div>
+        <button class="close-btn" id="btnCloseAthletes" title="Close modal">&times;</button>
+      </div>
+
+      <!-- Panel 1: Athlete List -->
+      <div id="panelAthleteList">
+        <div class="search-box" style="margin-bottom: 1rem;">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="inputSearchAthletes" class="search-input" placeholder="Search athletes by name or code...">
+        </div>
+        <div id="athletesListContainer" class="athletes-directory-list">
+          <div class="text-muted text-center p-3">Loading athletes...</div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Register New Athlete -->
+      <div id="panelAthleteNew" class="hidden">
+        <form id="formAddAthlete">
+          <div class="form-group">
+            <label class="form-label" for="inputAthleteName">Athlete Full Name *</label>
+            <input type="text" class="form-input" id="inputAthleteName" placeholder="e.g. Arjuna Pratama" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="inputAthleteCode">Athlete Code / Registration # (Optional)</label>
+            <input type="text" class="form-input" id="inputAthleteCode" placeholder="e.g. INA-001" autocomplete="off">
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary w-100">Save Athlete</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
   <!-- MODAL: CREATE SESSION -->
-  <div class="modal-overlay hidden" id="modalCreateSession">
-    <div class="modal-content">
+  <!-- ============================================== -->
+  <div class="modal-overlay hidden" id="modalCreateSession" role="dialog" aria-modal="true">
+    <div class="modal-content modal-md">
       <div class="modal-header">
         <h3 class="modal-title" id="modalSessionTitle">Create Scoring Session</h3>
-        <button class="close-btn" id="btnCloseCreateSession">&times;</button>
+        <button class="close-btn" id="btnCloseCreateSession" title="Close modal">&times;</button>
       </div>
       <form id="formCreateSession">
         <div class="form-group">
-          <label class="form-label">Athlete</label>
+          <label class="form-label" for="selectAthlete">Athlete *</label>
           <div style="display: flex; gap: 0.5rem;">
             <select class="form-select" id="selectAthlete" required style="flex: 1;">
               <option value="">Select an athlete...</option>
             </select>
-            <button type="button" class="btn btn-secondary" id="btnOpenNewAthleteModal">+ Add</button>
+            <button type="button" class="btn btn-secondary" id="btnOpenNewAthleteFromSession" title="Add new athlete">+ Add</button>
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Bow Category</label>
+          <label class="form-label" for="selectBowCategory">Bow Category *</label>
           <select class="form-select" id="selectBowCategory" required>
-            <option value="Recurve">Recurve</option>
+            <option value="Recurve">Recurve (Olympic Standard)</option>
             <option value="Compound">Compound</option>
             <option value="Barebow">Barebow</option>
             <option value="Standard Bow / National">Standard Bow / National</option>
@@ -287,101 +492,150 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Session Type</label>
+          <label class="form-label" for="selectSessionType">Session Type</label>
           <select class="form-select" id="selectSessionType">
-            <option value="training">Training</option>
-            <option value="competition">Competition</option>
+            <option value="training">Training (Practice)</option>
+            <option value="competition">Competition (Official Round)</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Distance</label>
+          <label class="form-label" for="selectDistance">Target Distance</label>
           <select class="form-select" id="selectDistance">
             <option value="70m">70 meters (Olympic Recurve)</option>
             <option value="50m">50 meters (Compound / Barebow)</option>
             <option value="30m">30 meters (Short distance)</option>
-            <option value="18m">18 meters (Indoor WA)</option>
-            <option value="Custom">Custom Distance</option>
+            <option value="18m">18 meters (Indoor WA Standard)</option>
+            <option value="Custom">Custom Distance...</option>
           </select>
           <input type="text" class="form-input hidden" id="inputCustomDistance" placeholder="e.g. 40m" style="margin-top: 0.5rem;">
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
-            <label class="form-label">Arrows per End</label>
+            <label class="form-label" for="selectArrowsPerEnd">Arrows per End</label>
             <select class="form-select" id="selectArrowsPerEnd">
               <option value="6" selected>6 Arrows</option>
               <option value="3">3 Arrows</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Number of Ends</label>
+            <label class="form-label" for="inputTotalEnds">Number of Ends</label>
             <input type="number" class="form-input" id="inputTotalEnds" value="10" min="1" max="50" required>
           </div>
         </div>
 
         <div style="margin-top: 1.5rem;">
-          <button type="submit" class="btn btn-primary" style="width: 100%;">Start Scoring Session</button>
+          <button type="submit" class="btn btn-primary w-100">Start Scoring Session ➔</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: ADD ATHLETE -->
-  <div class="modal-overlay hidden" id="modalAddAthlete">
-    <div class="modal-content" style="max-width: 420px;">
+  <!-- ============================================== -->
+  <!-- MODAL: INTERACTIVE END CORRECTION / EDIT -->
+  <!-- ============================================== -->
+  <div class="modal-overlay hidden" id="modalEditEnd" role="dialog" aria-modal="true">
+    <div class="modal-content modal-md">
       <div class="modal-header">
-        <h3 class="modal-title">Register Athlete</h3>
-        <button class="close-btn" id="btnCloseAddAthlete">&times;</button>
+        <h3 class="modal-title" id="editEndModalTitle">Edit End Scores</h3>
+        <button class="close-btn" id="btnCloseEditEnd">&times;</button>
       </div>
-      <form id="formAddAthlete">
-        <div class="form-group">
-          <label class="form-label">Athlete Full Name</label>
-          <input type="text" class="form-input" id="inputAthleteName" placeholder="e.g. Arjuna Pratama" required>
+      <div>
+        <p class="text-secondary text-sm" style="margin-bottom: 1rem;">
+          Select an arrow slot below and tap the corrected score.
+        </p>
+
+        <!-- Edit Slots -->
+        <div class="arrow-slots-list" id="editEndSlotsContainer" style="margin-bottom: 1.25rem;">
+          <!-- Rendered dynamically -->
         </div>
-        <div class="form-group">
-          <label class="form-label">Athlete ID / Code (Optional)</label>
-          <input type="text" class="form-input" id="inputAthleteCode" placeholder="e.g. ARC-001">
+
+        <!-- Mini Keypad -->
+        <div class="keypad-grid" style="gap: 0.5rem; margin-bottom: 1.5rem;">
+          <button class="keypad-btn key-x edit-keypad-btn" data-val="X">X</button>
+          <button class="keypad-btn key-10 edit-keypad-btn" data-val="10">10</button>
+          <button class="keypad-btn key-9 edit-keypad-btn" data-val="9">9</button>
+          <button class="keypad-btn key-m edit-keypad-btn" data-val="M">M</button>
+
+          <button class="keypad-btn key-8 edit-keypad-btn" data-val="8">8</button>
+          <button class="keypad-btn key-7 edit-keypad-btn" data-val="7">7</button>
+          <button class="keypad-btn key-6 edit-keypad-btn" data-val="6">6</button>
+          <button class="keypad-btn key-5 edit-keypad-btn" data-val="5">5</button>
+
+          <button class="keypad-btn key-4 edit-keypad-btn" data-val="4">4</button>
+          <button class="keypad-btn key-3 edit-keypad-btn" data-val="3">3</button>
+          <button class="keypad-btn key-2 edit-keypad-btn" data-val="2">2</button>
+          <button class="keypad-btn key-1 edit-keypad-btn" data-val="1">1</button>
         </div>
-        <div style="margin-top: 1.25rem;">
-          <button type="submit" class="btn btn-primary" style="width: 100%;">Save Athlete</button>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary flex-1" id="btnCancelEditEnd">Cancel</button>
+          <button type="button" class="btn btn-primary flex-1" id="btnSaveEditEnd">Save Corrections</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
+  <!-- ============================================== -->
+  <!-- MODAL: MODERN CONFIRMATION DIALOG -->
+  <!-- ============================================== -->
+  <div class="modal-overlay hidden" id="modalConfirm" role="dialog" aria-modal="true">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title" id="confirmModalTitle">Confirmation</h3>
+        <button class="close-btn" id="btnDismissConfirm">&times;</button>
+      </div>
+      <p id="confirmModalMessage" class="text-secondary" style="margin-bottom: 1.5rem; line-height: 1.5;">
+        Are you sure you want to proceed?
+      </p>
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary flex-1" id="btnConfirmCancel">Cancel</button>
+        <button type="button" class="btn btn-primary flex-1" id="btnConfirmOk">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
   <!-- MODAL: AI TARGET SCAN & CONFIRMATION -->
-  <div class="modal-overlay hidden" id="modalAiScan">
-    <div class="modal-content" style="max-width: 540px;">
+  <!-- ============================================== -->
+  <div class="modal-overlay hidden" id="modalAiScan" role="dialog" aria-modal="true">
+    <div class="modal-content modal-lg">
       <div class="modal-header">
         <h3 class="modal-title">AI Target & Arrow Detection</h3>
         <button class="close-btn" id="btnCloseAiScan">&times;</button>
       </div>
       <div>
-        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">
-          Upload or take a photo of your target face. The AI detects the target rings and estimates each arrow's score based on impact position. You can confirm or correct the scores before applying.
+        <p class="text-secondary text-sm" style="margin-bottom: 1.25rem;">
+          Upload or photograph your target face. The computer vision engine calculates arrow impact positions and candidate ring scores. Review and correct each score before confirming.
         </p>
 
-        <div style="margin-bottom: 1.25rem;">
-          <input type="file" id="targetImageInput" accept="image/*" class="form-input" capture="environment">
+        <div class="file-dropzone" id="fileDropzone">
+          <input type="file" id="targetImageInput" accept="image/*" class="file-input-hidden" capture="environment">
+          <div class="dropzone-inner" id="dropzoneClickArea">
+            <span class="dropzone-icon">📷</span>
+            <div class="dropzone-text">Click or drag & drop target photo here</div>
+            <div class="dropzone-sub">Supports JPEG, PNG, WEBP</div>
+          </div>
         </div>
 
-        <div id="aiScanLoading" class="hidden" style="text-align: center; padding: 1.5rem; color: var(--ring-gold);">
-          <div>Detecting target rings and arrows...</div>
+        <div id="aiScanLoading" class="hidden loading-ai-box">
+          <div class="spinner"></div>
+          <div class="loading-ai-text">Detecting target rings & arrow impacts...</div>
         </div>
 
         <div id="aiScanResults" class="hidden">
-          <h4 style="font-size: 1rem; margin-bottom: 0.5rem;">Detected Arrows</h4>
-          <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-            Review each score below. Click any score chip to edit before confirming:
-          </p>
-          <div id="aiDetectedChips" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+          <div class="ai-results-header">
+            <h4>Candidate Scores</h4>
+            <span class="text-sm text-secondary">Tap any score chip to correct</span>
+          </div>
+          <div id="aiDetectedChips" class="ai-chips-list">
             <!-- Rendered detected arrow chips -->
           </div>
 
-          <div style="display: flex; gap: 0.75rem;">
-            <button type="button" class="btn btn-secondary" id="btnCancelAiScan" style="flex: 1;">Cancel</button>
-            <button type="button" class="btn btn-primary" id="btnApplyAiScores" style="flex: 1.5;">Confirm & Apply Scores</button>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="button" class="btn btn-secondary flex-1" id="btnCancelAiScan">Discard</button>
+            <button type="button" class="btn btn-primary flex-1" id="btnApplyAiScores">Confirm & Apply Scores</button>
           </div>
         </div>
       </div>
