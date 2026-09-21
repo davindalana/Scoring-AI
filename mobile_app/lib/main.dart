@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data/services/api_service.dart';
+import 'data/services/local_storage_service.dart';
 import 'providers/scoring_provider.dart';
 import 'ui/core/theme.dart';
 import 'ui/features/home/home_screen.dart';
@@ -10,11 +11,17 @@ void main() async {
   final apiService = ApiService();
   await apiService.init();
 
+  final localStorageService = LocalStorageService();
+  await localStorageService.init();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => ScoringProvider(apiService: apiService)..init(),
+          create: (_) => ScoringProvider(
+            apiService: apiService,
+            localStorageService: localStorageService,
+          )..init(),
         ),
       ],
       child: const ArcheryScoringApp(),

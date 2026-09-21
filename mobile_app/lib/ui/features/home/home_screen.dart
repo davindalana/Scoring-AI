@@ -41,6 +41,16 @@ class HomeScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
+            icon: Icon(
+              provider.isOfflineMode ? Icons.cloud_off : Icons.cloud_done,
+              color: provider.isOfflineMode ? ArcheryColors.gold : ArcheryColors.accentGreen,
+            ),
+            tooltip: provider.isOfflineMode
+                ? 'Offline Mode Active (Tap to switch online)'
+                : 'Online Mode Active (Tap to switch offline)',
+            onPressed: () => provider.toggleOfflineMode(),
+          ),
+          IconButton(
             icon: const Icon(Icons.person_add_outlined),
             tooltip: 'Add Athlete',
             onPressed: () => showDialog(
@@ -66,6 +76,40 @@ class HomeScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
+            // Offline Status Banner
+            if (provider.isOfflineMode) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: ArcheryColors.gold.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: ArcheryColors.gold.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.bolt, color: ArcheryColors.gold, size: 18),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Offline Mode Active — Scores are saved locally on this device.',
+                        style: TextStyle(color: ArcheryColors.gold, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => provider.toggleOfflineMode(false),
+                      child: const Text('Try Online', style: TextStyle(fontSize: 12, color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // Active Athlete Banner
             Card(
               child: Padding(

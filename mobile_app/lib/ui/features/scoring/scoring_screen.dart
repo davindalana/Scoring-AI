@@ -27,9 +27,29 @@ class ScoringScreen extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              athlete?.name ?? session.athleteName ?? 'Athlete',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  athlete?.name ?? session.athleteName ?? 'Athlete',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                if (provider.isOfflineMode || session.id < 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: ArcheryColors.gold.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: ArcheryColors.gold, width: 0.8),
+                    ),
+                    child: const Text(
+                      'OFFLINE',
+                      style: TextStyle(fontSize: 9, color: ArcheryColors.gold, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ],
             ),
             Text(
               '${session.bowCategory} • ${session.distance} • ${session.arrowsPerEnd} arr/end',
@@ -46,7 +66,11 @@ class ScoringScreen extends StatelessWidget {
                 builder: (ctx) => AlertDialog(
                   backgroundColor: ArcheryColors.bgCard,
                   title: const Text('Exit Session?'),
-                  content: const Text('Progress is saved automatically on the server.'),
+                  content: Text(
+                    session.id < 0 || provider.isOfflineMode
+                        ? 'Progress is saved locally on this device.'
+                        : 'Progress is saved automatically on the server.',
+                  ),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Stay')),
                     ElevatedButton(

@@ -69,4 +69,35 @@ class ScoringEnd {
       createdAt: json['created_at']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'session_id': sessionId,
+    'end_number': endNumber,
+    'total_score': totalScore,
+    'x_count': xCount,
+    'arrows': arrows.map((a) => a.toJson()).toList(),
+    if (createdAt != null) 'created_at': createdAt,
+  };
+
+  ScoringEnd copyWith({
+    int? id,
+    int? sessionId,
+    int? endNumber,
+    int? totalScore,
+    int? xCount,
+    List<ArrowScore>? arrows,
+    String? createdAt,
+  }) {
+    return ScoringEnd(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      endNumber: endNumber ?? this.endNumber,
+      totalScore: totalScore ?? this.totalScore,
+      xCount: xCount ?? this.xCount,
+      arrows: arrows ?? this.arrows,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
+

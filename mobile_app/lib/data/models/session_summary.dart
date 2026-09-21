@@ -22,6 +22,14 @@ class EndSummaryItem {
       cumulativeScore: json['cumulative_score'] as int? ?? 0,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'end_number': endNumber,
+    'total_score': totalScore,
+    'x_count': xCount,
+    'arrow_count': arrowCount,
+    'cumulative_score': cumulativeScore,
+  };
 }
 
 class EndScoreHighlight {
@@ -36,6 +44,11 @@ class EndScoreHighlight {
       score: json['score'] as int,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'end_number': endNumber,
+    'score': score,
+  };
 }
 
 class SessionSummary {
@@ -88,4 +101,18 @@ class SessionSummary {
           .toList(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'session_id': sessionId,
+    'total_score': totalScore,
+    'total_x': totalX,
+    'total_arrows': totalArrows,
+    'total_ends': totalEnds,
+    'average_score_per_arrow': averageScorePerArrow,
+    'average_score_per_end': averageScorePerEnd,
+    'highest_scoring_end': highestScoringEnd?.toJson(),
+    'lowest_scoring_end': lowestScoringEnd?.toJson(),
+    'ends_summary': endsSummary.map((e) => e.toJson()).toList(),
+  };
 }
+

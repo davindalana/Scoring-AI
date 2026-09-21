@@ -48,4 +48,52 @@ class ScoringSession {
       completedAt: json['completed_at']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'athlete_id': athleteId,
+    if (athleteName != null) 'athlete_name': athleteName,
+    if (athleteCode != null) 'athlete_code': athleteCode,
+    'bow_category': bowCategory,
+    'session_type': sessionType,
+    'distance': distance,
+    'arrows_per_end': arrowsPerEnd,
+    'total_ends': totalEnds,
+    'current_end': currentEnd,
+    'status': status,
+    if (startedAt != null) 'started_at': startedAt,
+    if (completedAt != null) 'completed_at': completedAt,
+  };
+
+  ScoringSession copyWith({
+    int? id,
+    int? athleteId,
+    String? athleteName,
+    String? athleteCode,
+    String? bowCategory,
+    String? sessionType,
+    String? distance,
+    int? arrowsPerEnd,
+    int? totalEnds,
+    int? currentEnd,
+    String? status,
+    String? startedAt,
+    String? completedAt,
+  }) {
+    return ScoringSession(
+      id: id ?? this.id,
+      athleteId: athleteId ?? this.athleteId,
+      athleteName: athleteName ?? this.athleteName,
+      athleteCode: athleteCode ?? this.athleteCode,
+      bowCategory: bowCategory ?? this.bowCategory,
+      sessionType: sessionType ?? this.sessionType,
+      distance: distance ?? this.distance,
+      arrowsPerEnd: arrowsPerEnd ?? this.arrowsPerEnd,
+      totalEnds: totalEnds ?? this.totalEnds,
+      currentEnd: currentEnd ?? this.currentEnd,
+      status: status ?? this.status,
+      startedAt: startedAt ?? this.startedAt,
+      completedAt: completedAt ?? this.completedAt,
+    );
+  }
 }
