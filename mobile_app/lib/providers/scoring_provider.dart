@@ -124,35 +124,31 @@ class ScoringProvider extends ChangeNotifier {
     }
   }
 
-  Future<Athlete> addAthlete(String name, String? code) async {
+  Future<Athlete> updateAthleteProfile(String name, String? code) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
     try {
-      if (_isOfflineMode) {
-        final athlete = await localStorageService.addAthlete(name, code);
-        await loadAthletes();
-        _selectedAthlete = athlete;
-        return athlete;
-      }
-
-      try {
-        final athlete = await apiService.createAthlete(name, code);
-        await loadAthletes();
-        _selectedAthlete = athlete;
-        return athlete;
-      } catch (e) {
-        // Fallback to local storage
-        _isOfflineMode = true;
-        final athlete = await localStorageService.addAthlete(name, code);
-        await loadAthletes();
-        _selectedAthlete = athlete;
-        return athlete;
-      }
+      final current = _selectedAthlete ?? Athlete(id: -1, name: 'Athlete');
+      final updated = Athlete(
+        id: current.id,
+        name: name,
+        athleteCode: code,
+        createdAt: current.createdAt,
+      );
+      _selectedAthlete = updated;
+      _athletes = [updated];
+      await localStorageService.saveAthletes([updated]);
+      notifyListeners();
+      return updated;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<Athlete> addAthlete(String name, String? code) async {
+    return await updateAthleteProfile(name, code);
   }
 
   Future<void> loadSessions() async {

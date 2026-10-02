@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../providers/scoring_provider.dart';
 import '../../core/theme.dart';
 import '../session/create_session_sheet.dart';
-import '../session/athlete_dialog.dart';
 import '../settings/settings_dialog.dart';
 import '../scoring/scoring_screen.dart';
 import '../summary/summary_screen.dart';
@@ -49,14 +48,6 @@ class HomeScreen extends StatelessWidget {
                 ? 'Offline Mode Active (Tap to switch online)'
                 : 'Online Mode Active (Tap to switch offline)',
             onPressed: () => provider.toggleOfflineMode(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.person_add_outlined),
-            tooltip: 'Add Athlete',
-            onPressed: () => showDialog(
-              context: context,
-              builder: (_) => const AthleteDialog(),
-            ),
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
@@ -110,33 +101,45 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
 
-            // Active Athlete Banner
+            // Athlete Profile Card
             Card(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
+                      radius: 20,
                       backgroundColor: ArcheryColors.gold,
                       foregroundColor: Colors.black,
-                      child: Icon(Icons.person),
+                      child: Text(
+                        (provider.selectedAthlete?.name.isNotEmpty == true)
+                            ? provider.selectedAthlete!.name[0].toUpperCase()
+                            : 'A',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Active Athlete', style: TextStyle(color: ArcheryColors.textSecondary, fontSize: 11)),
+                          const Text('Archer Profile', style: TextStyle(color: ArcheryColors.textSecondary, fontSize: 11)),
                           Text(
-                            provider.selectedAthlete?.name ?? 'No Athlete Selected',
+                            provider.selectedAthlete?.name ?? 'Athlete',
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                           ),
+                          if (provider.selectedAthlete?.athleteCode != null)
+                            Text(
+                              provider.selectedAthlete!.athleteCode!,
+                              style: const TextStyle(color: ArcheryColors.gold, fontSize: 12),
+                            ),
                         ],
                       ),
                     ),
-                    TextButton(
-                      onPressed: () => _showSelectAthleteDialog(context, provider),
-                      child: const Text('Change'),
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20, color: ArcheryColors.textSecondary),
+                      tooltip: 'Edit Profile',
+                      onPressed: () => _showEditProfileDialog(context, provider),
                     ),
                   ],
                 ),
@@ -323,41 +326,59 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _showSelectAthleteDialog(BuildContext context, ScoringProvider provider) {
+  void _showEditProfileDialog(BuildContext context, ScoringProvider provider) {
+    final current = provider.selectedAthlete;
+    final nameCtrl = TextEditingController(text: current?.name ?? '');
+    final codeCtrl = TextEditingController(text: current?.athleteCode ?? '');
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: ArcheryColors.bgCard,
-        title: const Text('Select Active Athlete'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: provider.athletes.length,
-            itemBuilder: (c, idx) {
-              final a = provider.athletes[idx];
-              final isSel = provider.selectedAthlete?.id == a.id;
-              return ListTile(
-                title: Text(a.name, style: TextStyle(fontWeight: isSel ? FontWeight.bold : FontWeight.normal)),
-                subtitle: a.athleteCode != null ? Text(a.athleteCode!) : null,
-                trailing: isSel ? const Icon(Icons.check, color: ArcheryColors.gold) : null,
-                onTap: () {
-                  provider.setSelectedAthlete(a);
-                  Navigator.pop(ctx);
-                },
-              );
-            },
-          ),
+        title: const Row(
+          children: [
+            Icon(Icons.person, color: ArcheryColors.gold),
+            SizedBox(width: 8),
+            Text('Edit Archer Profile'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Athlete Name',
+                hintText: 'e.g. Davin',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: codeCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Club / ID (Optional)',
+                hintText: 'e.g. Club Archer 70m',
+              ),
+            ),
+          ],
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              showDialog(context: context, builder: (_) => const AthleteDialog());
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final newName = nameCtrl.text.trim();
+              if (newName.isNotEmpty) {
+                await provider.updateAthleteProfile(
+                  newName,
+                  codeCtrl.text.trim().isEmpty ? null : codeCtrl.text.trim(),
+                );
+              }
+              if (ctx.mounted) Navigator.pop(ctx);
             },
-            child: const Text('+ New Athlete'),
+            child: const Text('Save'),
           ),
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done')),
         ],
       ),
     );

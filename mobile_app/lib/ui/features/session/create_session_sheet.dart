@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/scoring_provider.dart';
-import '../../../data/models/athlete.dart';
 import '../../core/theme.dart';
-import 'athlete_dialog.dart';
 import '../scoring/scoring_screen.dart';
 
 class CreateSessionSheet extends StatefulWidget {
@@ -24,7 +22,6 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
   String _distance = '70m';
   int _arrowsPerEnd = 6;
   int _totalEnds = 10;
-  Athlete? _selectedAthlete;
 
   final List<String> _bowCategories = [
     'Recurve',
@@ -40,10 +37,6 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
   void initState() {
     super.initState();
     _sessionType = widget.initialSessionType;
-    final provider = context.read<ScoringProvider>();
-    if (provider.athletes.isNotEmpty) {
-      _selectedAthlete = provider.selectedAthlete ?? provider.athletes.first;
-    }
   }
 
   @override
@@ -93,56 +86,6 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
             ),
             const Divider(color: ArcheryColors.borderColor),
             const SizedBox(height: 12),
-
-            // Athlete Selector
-            const Text('Athlete', style: TextStyle(color: ArcheryColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: ArcheryColors.bgPrimary,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: ArcheryColors.borderColor),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<Athlete>(
-                        value: _selectedAthlete,
-                        isExpanded: true,
-                        dropdownColor: ArcheryColors.bgCard,
-                        hint: const Text('Select an athlete...'),
-                        items: provider.athletes.map((ath) {
-                          return DropdownMenuItem<Athlete>(
-                            value: ath,
-                            child: Text('${ath.name} ${ath.athleteCode != null ? "(${ath.athleteCode})" : ""}'),
-                          );
-                        }).toList(),
-                        onChanged: (ath) {
-                          setState(() => _selectedAthlete = ath);
-                          provider.setSelectedAthlete(ath);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filledTonal(
-                  icon: const Icon(Icons.person_add),
-                  onPressed: () async {
-                    final created = await showDialog<Athlete>(
-                      context: context,
-                      builder: (_) => const AthleteDialog(),
-                    );
-                    if (created != null) {
-                      setState(() => _selectedAthlete = created);
-                    }
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
 
             // Bow Category (Recurve, Compound, Barebow, Standard Bow)
             const Text('Bow Category', style: TextStyle(color: ArcheryColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
@@ -255,20 +198,13 @@ class _CreateSessionSheetState extends State<CreateSessionSheet> {
                 onPressed: provider.isLoading
                     ? null
                     : () async {
-                        if (_selectedAthlete == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please select or create an athlete')),
-                          );
-                          return;
-                        }
-
                         final effectiveDistance = _distance == 'Custom'
                             ? _customDistanceController.text.trim()
                             : _distance;
 
                         try {
                           await provider.createSession(
-                            athleteId: _selectedAthlete!.id,
+                            athleteId: provider.selectedAthlete?.id ?? -1,
                             bowCategory: _bowCategory,
                             sessionType: _sessionType,
                             distance: effectiveDistance.isEmpty ? '18m' : effectiveDistance,
