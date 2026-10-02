@@ -195,85 +195,94 @@ class SummaryScreen extends StatelessWidget {
             Card(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: DataTable(
-                  horizontalMargin: 12,
-                  columnSpacing: 14,
-                  headingRowColor: WidgetStateProperty.all(ArcheryColors.bgSecondary),
-                  columns: const [
-                    DataColumn(label: Text('End', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('Arrows', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('Score', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('X', style: TextStyle(fontWeight: FontWeight.bold))),
-                    DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.bold))),
-                  ],
-                  rows: ends.map((end) {
-                    final sumItem = summary.endsSummary.firstWhere(
-                      (e) => e.endNumber == end.endNumber,
-                      orElse: () => EndSummaryItem(
-                        endNumber: end.endNumber,
-                        totalScore: end.totalScore,
-                        xCount: end.xCount,
-                        arrowCount: end.arrows.length,
-                        cumulativeScore: end.totalScore,
-                      ),
-                    );
-
-                    return DataRow(
-                      cells: [
-                        DataCell(Text('#${end.endNumber}', style: const TextStyle(fontWeight: FontWeight.bold))),
-                        DataCell(
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: end.arrows.map((a) {
-                              final bg = ArcheryColors.getColorForScore(a.score, isX: a.isX);
-                              final fg = ArcheryColors.getTextColorForScore(a.score, isX: a.isX);
-                              return Container(
-                                margin: const EdgeInsets.only(right: 3),
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
-                                child: Text(a.isX ? 'X' : a.score, style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold)),
-                              );
-                            }).toList(),
-                          ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    horizontalMargin: 12,
+                    columnSpacing: 10,
+                    headingRowColor: WidgetStateProperty.all(ArcheryColors.bgSecondary),
+                    columns: const [
+                      DataColumn(label: Text('End', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Arrows', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Score', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('X', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.bold))),
+                    ],
+                    rows: ends.map((end) {
+                      final sumItem = summary.endsSummary.firstWhere(
+                        (e) => e.endNumber == end.endNumber,
+                        orElse: () => EndSummaryItem(
+                          endNumber: end.endNumber,
+                          totalScore: end.totalScore,
+                          xCount: end.xCount,
+                          arrowCount: end.arrows.length,
+                          cumulativeScore: end.totalScore,
                         ),
-                        DataCell(Text('${end.totalScore}', style: const TextStyle(color: ArcheryColors.gold, fontWeight: FontWeight.bold))),
-                        DataCell(Text('${end.xCount}')),
-                        DataCell(Text('${sumItem.cumulativeScore}', style: const TextStyle(fontWeight: FontWeight.bold))),
-                      ],
-                    );
-                  }).toList(),
+                      );
+
+                      return DataRow(
+                        cells: [
+                          DataCell(Text('#${end.endNumber}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                          DataCell(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: end.arrows.map((a) {
+                                final bg = ArcheryColors.getColorForScore(a.score, isX: a.isX);
+                                final fg = ArcheryColors.getTextColorForScore(a.score, isX: a.isX);
+                                return Container(
+                                  margin: const EdgeInsets.only(right: 2),
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+                                  child: Text(a.isX ? 'X' : a.score, style: TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.bold)),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          DataCell(Text('${end.totalScore}', style: const TextStyle(color: ArcheryColors.gold, fontWeight: FontWeight.bold))),
+                          DataCell(Text('${end.xCount}')),
+                          DataCell(Text('${sumItem.cumulativeScore}', style: const TextStyle(fontWeight: FontWeight.bold))),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 24),
-
-            // Bottom Actions
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
-                    child: const Text('Back to Home'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.popUntil(context, (route) => route.isFirst);
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (_) => const CreateSessionSheet(),
-                      );
-                    },
-                    child: const Text('New Session ➔'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
           ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: ArcheryColors.bgSecondary,
+          border: Border(top: BorderSide(color: ArcheryColors.borderColor)),
+        ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+                  child: const Text('Back to Home'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => const CreateSessionSheet(),
+                    );
+                  },
+                  child: const Text('New Session ➔'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

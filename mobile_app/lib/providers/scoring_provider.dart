@@ -512,6 +512,56 @@ class ScoringProvider extends ChangeNotifier {
     await loadSessions();
   }
 
+  Future<void> finishSessionNow() async {
+    if (_currentSession == null) return;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final sessionId = _currentSession!.id;
+      final isOffline = _isOfflineMode || sessionId < 0;
+
+      if (isOffline) {
+        _completedEnds = await localStorageService.getSessionEnds(sessionId);
+        _currentSessionSummary = OfflineScoringEngine.calculateSessionSummary(
+          sessionId,
+          _completedEnds,
+          totalEnds: _completedEnds.isNotEmpty ? _completedEnds.length : _currentSession!.totalEnds,
+        );
+        await localStorageService.saveSessionSummary(sessionId, _currentSessionSummary!);
+
+        _currentSession = _currentSession!.copyWith(
+          status: 'completed',
+          completedAt: DateTime.now().toIso8601String(),
+        );
+        await localStorageService.saveSession(_currentSession!);
+      } else {
+        try {
+          await apiService.completeSession(sessionId);
+          await openSession(sessionId);
+        } catch (e) {
+          _isOfflineMode = true;
+          _completedEnds = await localStorageService.getSessionEnds(sessionId);
+          _currentSessionSummary = OfflineScoringEngine.calculateSessionSummary(
+            sessionId,
+            _completedEnds,
+            totalEnds: _completedEnds.isNotEmpty ? _completedEnds.length : _currentSession!.totalEnds,
+          );
+          await localStorageService.saveSessionSummary(sessionId, _currentSessionSummary!);
+          _currentSession = _currentSession!.copyWith(
+            status: 'completed',
+            completedAt: DateTime.now().toIso8601String(),
+          );
+          await localStorageService.saveSession(_currentSession!);
+        }
+      }
+      await loadSessions();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> editPreviousEnd(int endNumber, List<ArrowScore> updatedArrows) async {
     if (_currentSession == null) return;
     _isLoading = true;

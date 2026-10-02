@@ -59,7 +59,41 @@ class ScoringScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.check_circle_outline, color: ArcheryColors.gold),
+            tooltip: 'Finish Session Now',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: ArcheryColors.bgCard,
+                  title: const Text('Finish Session?'),
+                  content: const Text(
+                    'Complete session with the ends recorded so far and view the final summary.',
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Continue Shooting')),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: ArcheryColors.gold),
+                      onPressed: () async {
+                        Navigator.pop(ctx);
+                        await provider.finishSessionNow();
+                        if (context.mounted) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const SummaryScreen()),
+                          );
+                        }
+                      },
+                      child: const Text('Finish Session', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.close),
+            tooltip: 'Exit Session',
             onPressed: () {
               showDialog(
                 context: context,
