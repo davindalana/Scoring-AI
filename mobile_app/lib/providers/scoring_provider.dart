@@ -1,21 +1,36 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../data/models/athlete.dart';
 import '../data/models/session.dart';
 import '../data/models/end_score.dart';
 import '../data/models/session_summary.dart';
+import '../data/models/shot_event.dart';
 import '../data/services/api_service.dart';
 import '../data/services/local_storage_service.dart';
 import '../data/services/offline_scoring_engine.dart';
+import '../data/services/watch_connectivity_service.dart';
 
 class ScoringProvider extends ChangeNotifier {
   final ApiService apiService;
   final LocalStorageService localStorageService;
+  final WatchConnectivityService watchService;
 
   ScoringProvider({
     required this.apiService,
     LocalStorageService? localStorageService,
-  }) : localStorageService = localStorageService ?? LocalStorageService();
+    WatchConnectivityService? watchService,
+  })  : localStorageService = localStorageService ?? LocalStorageService(),
+        watchService = watchService ?? WatchConnectivityService();
+
+  WatchStatus _watchStatus = const WatchStatus();
+  WatchStatus get watchStatus => _watchStatus;
+
+  List<ShotEvent> _sessionShots = [];
+  List<ShotEvent> get sessionShots => _sessionShots;
+
+  StreamSubscription? _shotSubscription;
+  StreamSubscription? _watchStatusSubscription;
 
   List<Athlete> _athletes = [];
   List<Athlete> get athletes => _athletes;
@@ -85,10 +100,50 @@ class ScoringProvider extends ChangeNotifier {
   Future<void> init() async {
     await localStorageService.init();
     await apiService.init();
+    await watchService.init();
+
+    _watchStatus = watchService.currentStatus;
+    _watchStatusSubscription = watchService.onStatusChanged.listen((status) {
+      _watchStatus = status;
+      notifyListeners();
+    });
+
+    _shotSubscription = watchService.onShotDetected.listen(_handleIncomingShot);
+
     _isOfflineMode = localStorageService.isOfflineForced;
 
     await loadAthletes();
     await loadSessions();
+  }
+
+  void _handleIncomingShot(ShotEvent shot) async {
+    if (_currentSession == null) return;
+    
+    // Auto-match with current active slot if unassigned
+    final slotNumber = _activeSlotIndex + 1;
+    final slotAlreadyMatched = _sessionShots.any(
+      (s) => s.matchedEndNumber == _currentEndNumber && s.matchedArrowNumber == slotNumber && !s.isIgnored,
+    );
+
+    ShotEvent processedShot = shot.copyWith(sessionId: _currentSession!.id);
+    if (!slotAlreadyMatched && _activeSlotIndex < _currentEndArrows.length) {
+      processedShot = processedShot.copyWith(
+        matchedEndNumber: _currentEndNumber,
+        matchedArrowNumber: slotNumber,
+        status: 'matched',
+      );
+    }
+
+    _sessionShots.add(processedShot);
+    await localStorageService.addSessionShot(_currentSession!.id, processedShot);
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _shotSubscription?.cancel();
+    _watchStatusSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> loadAthletes() async {
@@ -290,6 +345,14 @@ class ScoringProvider extends ChangeNotifier {
         _currentEndNumber = _currentSession!.currentEnd;
         _initEndSlots(_currentSession!.arrowsPerEnd);
 
+        // Load shot events & notify watch
+        _sessionShots = await localStorageService.getSessionShots(sessionId);
+        await watchService.startWatchSession(
+          sessionId: sessionId,
+          athleteName: _currentSessionAthlete?.name ?? _currentSession?.athleteName,
+          currentEnd: _currentEndNumber,
+        );
+
         // Backup to local storage
         await localStorageService.saveSession(_currentSession!);
         await localStorageService.saveSessionEnds(sessionId, _completedEnds);
@@ -339,6 +402,14 @@ class ScoringProvider extends ChangeNotifier {
 
     _currentEndNumber = _currentSession!.currentEnd;
     _initEndSlots(_currentSession!.arrowsPerEnd);
+
+    // Load shot events & notify watch
+    _sessionShots = await localStorageService.getSessionShots(sessionId);
+    await watchService.startWatchSession(
+      sessionId: sessionId,
+      athleteName: _currentSessionAthlete?.name ?? _currentSession?.athleteName,
+      currentEnd: _currentEndNumber,
+    );
   }
 
   void _initEndSlots(int arrowsCount) {
@@ -504,6 +575,9 @@ class ScoringProvider extends ChangeNotifier {
     _currentEndNumber = nextEndNumber;
     if (!isLastEnd) {
       _initEndSlots(_currentSession!.arrowsPerEnd);
+      await watchService.updateSessionState(currentEnd: nextEndNumber);
+    } else {
+      await watchService.endWatchSession();
     }
     await loadSessions();
   }
@@ -514,6 +588,7 @@ class ScoringProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
+      await watchService.endWatchSession();
       final sessionId = _currentSession!.id;
       final isOffline = _isOfflineMode || sessionId < 0;
 
@@ -637,5 +712,146 @@ class ScoringProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
+  }
+
+  // --- Apple Watch Shot Telemetry & Rematching Methods ---
+
+  ShotEvent? getShotForArrow(int endNumber, int arrowNumber) {
+    try {
+      return _sessionShots.firstWhere(
+        (s) => s.matchedEndNumber == endNumber && s.matchedArrowNumber == arrowNumber && !s.isIgnored,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<ShotEvent> getShotsForEnd(int endNumber) {
+    return _sessionShots.where((s) => s.matchedEndNumber == endNumber).toList();
+  }
+
+  List<ShotEvent> getUnmatchedShots() {
+    return _sessionShots.where((s) => s.status == 'unmatched').toList();
+  }
+
+  Future<void> linkShotToArrow(String shotId, int endNumber, int arrowNumber) async {
+    if (_currentSession == null) return;
+    final sessionId = _currentSession!.id;
+
+    for (int i = 0; i < _sessionShots.length; i++) {
+      final s = _sessionShots[i];
+      if (s.matchedEndNumber == endNumber && s.matchedArrowNumber == arrowNumber && s.id != shotId) {
+        // Displace previous match
+        _sessionShots[i] = s.copyWith(
+          clearMatchedEnd: true,
+          clearMatchedArrow: true,
+          status: 'unmatched',
+        );
+      } else if (s.id == shotId) {
+        _sessionShots[i] = s.copyWith(
+          matchedEndNumber: endNumber,
+          matchedArrowNumber: arrowNumber,
+          status: 'matched',
+        );
+      }
+    }
+    await localStorageService.saveSessionShots(sessionId, _sessionShots);
+    notifyListeners();
+  }
+
+  Future<void> unlinkShot(String shotId) async {
+    if (_currentSession == null) return;
+    final sessionId = _currentSession!.id;
+    final idx = _sessionShots.indexWhere((s) => s.id == shotId);
+    if (idx >= 0) {
+      _sessionShots[idx] = _sessionShots[idx].copyWith(
+        clearMatchedEnd: true,
+        clearMatchedArrow: true,
+        status: 'unmatched',
+      );
+      await localStorageService.saveSessionShots(sessionId, _sessionShots);
+      notifyListeners();
+    }
+  }
+
+  Future<void> ignoreShot(String shotId) async {
+    if (_currentSession == null) return;
+    final sessionId = _currentSession!.id;
+    final idx = _sessionShots.indexWhere((s) => s.id == shotId);
+    if (idx >= 0) {
+      _sessionShots[idx] = _sessionShots[idx].copyWith(
+        clearMatchedEnd: true,
+        clearMatchedArrow: true,
+        status: 'ignored',
+      );
+      await localStorageService.saveSessionShots(sessionId, _sessionShots);
+      notifyListeners();
+    }
+  }
+
+  Future<void> recordManualShotForActiveSlot() async {
+    if (_currentSession == null) return;
+    final shot = ShotEvent(
+      id: 'manual_${DateTime.now().millisecondsSinceEpoch}',
+      sessionId: _currentSession!.id,
+      timestamp: DateTime.now(),
+      confidence: 1.0,
+      peakAcceleration: 0.0,
+      drawDurationMs: 3000,
+      matchedEndNumber: _currentEndNumber,
+      matchedArrowNumber: _activeSlotIndex + 1,
+      isManual: true,
+      status: 'matched',
+    );
+    _sessionShots.add(shot);
+    await localStorageService.addSessionShot(_currentSession!.id, shot);
+    notifyListeners();
+  }
+
+  Future<void> autoAlignShotsForEnd(int endNumber) async {
+    if (_currentSession == null) return;
+    final sessionId = _currentSession!.id;
+
+    // Get unassigned shots and shots already tagged for this end, sorted by timestamp
+    final candidateShots = _sessionShots.where(
+      (s) => !s.isIgnored && (s.matchedEndNumber == endNumber || s.status == 'unmatched'),
+    ).toList()..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+    final arrowLimit = _currentSession!.arrowsPerEnd;
+    for (int i = 0; i < candidateShots.length; i++) {
+      final shot = candidateShots[i];
+      final targetIdx = _sessionShots.indexWhere((s) => s.id == shot.id);
+      if (targetIdx >= 0) {
+        if (i < arrowLimit) {
+          _sessionShots[targetIdx] = shot.copyWith(
+            matchedEndNumber: endNumber,
+            matchedArrowNumber: i + 1,
+            status: 'matched',
+          );
+        } else {
+          _sessionShots[targetIdx] = shot.copyWith(
+            clearMatchedEnd: true,
+            clearMatchedArrow: true,
+            status: 'unmatched',
+          );
+        }
+      }
+    }
+    await localStorageService.saveSessionShots(sessionId, _sessionShots);
+    notifyListeners();
+  }
+
+  Future<ShotEvent?> simulateShot({
+    double confidence = 0.94,
+    double peakAcceleration = 5.2,
+    int drawDurationMs = 3400,
+  }) async {
+    final sessionId = _currentSession?.id ?? 1;
+    return await watchService.simulateShot(
+      sessionId: sessionId,
+      confidence: confidence,
+      peakAcceleration: peakAcceleration,
+      drawDurationMs: drawDurationMs,
+    );
   }
 }

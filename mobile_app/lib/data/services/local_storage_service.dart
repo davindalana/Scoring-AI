@@ -4,6 +4,7 @@ import '../models/athlete.dart';
 import '../models/session.dart';
 import '../models/end_score.dart';
 import '../models/session_summary.dart';
+import '../models/shot_event.dart';
 
 class LocalStorageService {
   SharedPreferences? _prefs;
@@ -184,5 +185,44 @@ class LocalStorageService {
   Future<void> saveSessionSummary(int sessionId, SessionSummary summary) async {
     final raw = jsonEncode(summary.toJson());
     await prefs.setString(_summaryKey(sessionId), raw);
+  }
+
+  // --- Shot Events Storage per Session ---
+  String _shotsKey(int sessionId) => 'offline_session_shots_$sessionId';
+
+  Future<List<ShotEvent>> getSessionShots(int sessionId) async {
+    final raw = prefs.getString(_shotsKey(sessionId));
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      return list.map((item) => ShotEvent.fromJson(item as Map<String, dynamic>)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveSessionShots(int sessionId, List<ShotEvent> shots) async {
+    final raw = jsonEncode(shots.map((s) => s.toJson()).toList());
+    await prefs.setString(_shotsKey(sessionId), raw);
+  }
+
+  Future<void> addSessionShot(int sessionId, ShotEvent shot) async {
+    final shots = await getSessionShots(sessionId);
+    final idx = shots.indexWhere((s) => s.id == shot.id);
+    if (idx >= 0) {
+      shots[idx] = shot;
+    } else {
+      shots.add(shot);
+    }
+    await saveSessionShots(sessionId, shots);
+  }
+
+  Future<void> updateShotEvent(int sessionId, ShotEvent updatedShot) async {
+    final shots = await getSessionShots(sessionId);
+    final idx = shots.indexWhere((s) => s.id == updatedShot.id);
+    if (idx >= 0) {
+      shots[idx] = updatedShot;
+      await saveSessionShots(sessionId, shots);
+    }
   }
 }

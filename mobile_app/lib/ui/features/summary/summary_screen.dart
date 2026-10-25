@@ -189,6 +189,73 @@ class SummaryScreen extends StatelessWidget {
               const SizedBox(height: 20),
             ],
 
+            // iWatch Biometric & Shot Telemetry Section
+            Row(
+              children: [
+                const Icon(Icons.watch_outlined, color: ArcheryColors.gold, size: 18),
+                const SizedBox(width: 8),
+                const Text('iWatch Biometric & Shot Telemetry', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                child: Builder(
+                  builder: (_) {
+                    final shots = provider.sessionShots.where((s) => !s.isIgnored).toList();
+                    final matchedCount = shots.where((s) => s.isMatched).length;
+                    final avgHoldMs = shots.isNotEmpty
+                        ? shots.map((s) => s.drawDurationMs).reduce((a, b) => a + b) / shots.length
+                        : 0.0;
+                    final avgPeakG = shots.isNotEmpty
+                        ? shots.map((s) => s.peakAcceleration).reduce((a, b) => a + b) / shots.length
+                        : 0.0;
+                    final matchRate = summary.totalArrows > 0
+                        ? (matchedCount / summary.totalArrows * 100).clamp(0, 100).toInt()
+                        : 0;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildTelemetryItem('Shots Recorded', '${shots.length}', color: ArcheryColors.gold),
+                            ),
+                            Container(height: 28, width: 1, color: ArcheryColors.borderColor),
+                            Expanded(
+                              child: _buildTelemetryItem('Avg Hold Time', '${(avgHoldMs / 1000).toStringAsFixed(1)}s'),
+                            ),
+                            Container(height: 28, width: 1, color: ArcheryColors.borderColor),
+                            Expanded(
+                              child: _buildTelemetryItem('Peak Force', '${avgPeakG.toStringAsFixed(1)}G'),
+                            ),
+                            Container(height: 28, width: 1, color: ArcheryColors.borderColor),
+                            Expanded(
+                              child: _buildTelemetryItem('Match Rate', '$matchRate%'),
+                            ),
+                          ],
+                        ),
+                        if (shots.isEmpty) ...[
+                          const SizedBox(height: 10),
+                          const Divider(height: 1, color: ArcheryColors.borderColor),
+                          const SizedBox(height: 8),
+                          const Center(
+                            child: Text(
+                              'Data sensor jam tidak terekam pada sesi ini (skor manual tetap valid).',
+                              style: TextStyle(fontSize: 11, color: ArcheryColors.textMuted),
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
             // End-by-End Scorecard Table
             const Text('Official Scorecard', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -309,6 +376,23 @@ class SummaryScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTelemetryItem(String label, String value, {Color? color}) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 9, color: ArcheryColors.textSecondary, fontWeight: FontWeight.w600),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color ?? Colors.white),
+        ),
+      ],
     );
   }
 }

@@ -5,6 +5,7 @@ import '../../../data/models/end_score.dart';
 import '../../core/theme.dart';
 import 'ai_scan_dialog.dart';
 import '../summary/summary_screen.dart';
+import 'widgets/shot_rematch_dialog.dart';
 
 class ScoringScreen extends StatelessWidget {
   const ScoringScreen({super.key});
@@ -58,6 +59,25 @@ class ScoringScreen extends StatelessWidget {
           ],
         ),
         actions: [
+          IconButton(
+            icon: Badge(
+              isLabelVisible: provider.getUnmatchedShots().isNotEmpty,
+              backgroundColor: ArcheryColors.gold,
+              textColor: Colors.black,
+              label: Text('${provider.getUnmatchedShots().length}'),
+              child: Icon(
+                Icons.watch_outlined,
+                color: provider.watchStatus.isReachable ? ArcheryColors.accentGreen : ArcheryColors.gold,
+              ),
+            ),
+            tooltip: 'iWatch Telemetry & Rematching',
+            onPressed: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => ShotRematchSheet(endNumber: provider.currentEndNumber),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.check_circle_outline, color: ArcheryColors.gold),
             tooltip: 'Finish Session Now',
@@ -158,11 +178,43 @@ class ScoringScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
                         child: Column(
                           children: [
-                            const Row(
+                            Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Arrow Entries', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                Text('Tap circle to edit', style: TextStyle(color: ArcheryColors.textSecondary, fontSize: 11)),
+                                Row(
+                                  children: [
+                                    const Text('Arrow Entries', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                    const SizedBox(width: 8),
+                                    GestureDetector(
+                                      onTap: () => showModalBottomSheet(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (_) => ShotRematchSheet(endNumber: provider.currentEndNumber),
+                                      ),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: ArcheryColors.gold.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: ArcheryColors.gold.withValues(alpha: 0.4), width: 0.8),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.watch_outlined, size: 11, color: ArcheryColors.gold),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${provider.getShotsForEnd(provider.currentEndNumber).length} shots',
+                                              style: const TextStyle(fontSize: 10, color: ArcheryColors.gold, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const Text('Tap circle to edit', style: TextStyle(color: ArcheryColors.textSecondary, fontSize: 11)),
                               ],
                             ),
                             const SizedBox(height: 12),
@@ -177,34 +229,63 @@ class ScoringScreen extends StatelessWidget {
                                 final isFilled = arrow.score.isNotEmpty;
                                 final bg = ArcheryColors.getColorForScore(arrow.score, isX: arrow.isX);
                                 final fg = ArcheryColors.getTextColorForScore(arrow.score, isX: arrow.isX);
+                                final matchedShot = provider.getShotForArrow(provider.currentEndNumber, idx + 1);
 
                                 return GestureDetector(
                                   onTap: () => provider.setActiveSlotIndex(idx),
-                                  child: Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: isFilled ? bg : ArcheryColors.bgPrimary,
-                                      border: Border.all(
-                                        color: isActive
-                                            ? ArcheryColors.gold
-                                            : (isFilled ? bg : ArcheryColors.borderColor),
-                                        width: isActive ? 2.5 : 1.5,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: isFilled ? bg : ArcheryColors.bgPrimary,
+                                          border: Border.all(
+                                            color: isActive
+                                                ? ArcheryColors.gold
+                                                : (isFilled ? bg : ArcheryColors.borderColor),
+                                            width: isActive ? 2.5 : 1.5,
+                                          ),
+                                          boxShadow: isActive
+                                              ? [BoxShadow(color: ArcheryColors.gold.withValues(alpha: 0.4), blurRadius: 8)]
+                                              : null,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          isFilled ? (arrow.isX ? 'X' : arrow.score) : '${idx + 1}',
+                                          style: TextStyle(
+                                            color: isFilled ? fg : ArcheryColors.textMuted,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
                                       ),
-                                      boxShadow: isActive
-                                          ? [BoxShadow(color: ArcheryColors.gold.withValues(alpha: 0.4), blurRadius: 8)]
-                                          : null,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      isFilled ? (arrow.isX ? 'X' : arrow.score) : '${idx + 1}',
-                                      style: TextStyle(
-                                        color: isFilled ? fg : ArcheryColors.textMuted,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
+                                      const SizedBox(height: 4),
+                                      if (matchedShot != null)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                          decoration: BoxDecoration(
+                                            color: ArcheryColors.gold.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(color: ArcheryColors.gold.withValues(alpha: 0.4), width: 0.5),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(Icons.watch_outlined, size: 8, color: ArcheryColors.gold),
+                                              const SizedBox(width: 2),
+                                              Text(
+                                                matchedShot.isManual ? 'Mnl' : '${matchedShot.peakAcceleration.toStringAsFixed(1)}G',
+                                                style: const TextStyle(fontSize: 8, color: ArcheryColors.gold, fontWeight: FontWeight.bold),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else
+                                        const SizedBox(height: 12),
+                                    ],
                                   ),
                                 );
                               }).toList(),
