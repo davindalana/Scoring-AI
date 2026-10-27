@@ -134,9 +134,30 @@ class _AiScanDialogState extends State<AiScanDialog> {
                   ),
                 ],
               ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.5)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.bolt, color: Colors.greenAccent, size: 14),
+                        SizedBox(width: 4),
+                        Text('On-Device (100% Offline)', style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
               const Text(
-                'Take a photo of your target face. The AI detects concentric rings and arrow positions. You can confirm or correct scores before applying.',
+                'Ambil foto bantalan target panahan. Pola lingkaran cincin dan posisi anak panah diproses langsung di perangkat tanpa perlu internet.',
                 style: TextStyle(color: ArcheryColors.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 16),

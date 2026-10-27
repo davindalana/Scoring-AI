@@ -19,10 +19,10 @@
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		A10000012900000100000001 /* WatchBridgeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022900000100000001 /* WatchBridgeManager.swift */; };
 		A20000112900000100000001 /* ArcheryWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000012900000100000001 /* ArcheryWatchApp.swift */; };
-		A20000122900000100000001 /* Views/WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000022900000100000001 /* Views/WatchContentView.swift */; };
-		A20000132900000100000001 /* Motion/MotionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000032900000100000001 /* Motion/MotionManager.swift */; };
-		A20000142900000100000001 /* Motion/ShotDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000042900000100000001 /* Motion/ShotDetector.swift */; };
-		A20000152900000100000001 /* Connectivity/WatchSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000052900000100000001 /* Connectivity/WatchSessionManager.swift */; };
+		A20000122900000100000001 /* WatchContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000022900000100000001 /* WatchContentView.swift */; };
+		A20000132900000100000001 /* MotionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000032900000100000001 /* MotionManager.swift */; };
+		A20000142900000100000001 /* ShotDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000042900000100000001 /* ShotDetector.swift */; };
+		A20000152900000100000001 /* WatchSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000052900000100000001 /* WatchSessionManager.swift */; };
 		A20000162900000100000001 /* ArcheryWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A20000072900000100000001 /* ArcheryWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -92,10 +92,10 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10000022900000100000001 /* WatchBridgeManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WatchBridgeManager.swift; sourceTree = "<group>"; };
 		A20000012900000100000001 /* ArcheryWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcheryWatchApp.swift; sourceTree = "<group>"; };
-		A20000022900000100000001 /* Views/WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/WatchContentView.swift; sourceTree = "<group>"; };
-		A20000032900000100000001 /* Motion/MotionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion/MotionManager.swift; sourceTree = "<group>"; };
-		A20000042900000100000001 /* Motion/ShotDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion/ShotDetector.swift; sourceTree = "<group>"; };
-		A20000052900000100000001 /* Connectivity/WatchSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connectivity/WatchSessionManager.swift; sourceTree = "<group>"; };
+		A20000022900000100000001 /* WatchContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/WatchContentView.swift; sourceTree = "<group>"; };
+		A20000032900000100000001 /* MotionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion/MotionManager.swift; sourceTree = "<group>"; };
+		A20000042900000100000001 /* ShotDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion/ShotDetector.swift; sourceTree = "<group>"; };
+		A20000052900000100000001 /* WatchSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connectivity/WatchSessionManager.swift; sourceTree = "<group>"; };
 		A20000062900000100000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000072900000100000001 /* ArcheryWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ArcheryWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0A70C86A1CE73D4D7E6F825 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -214,10 +214,10 @@
 			isa = PBXGroup;
 			children = (
 				A20000012900000100000001 /* ArcheryWatchApp.swift */,
-				A20000022900000100000001 /* Views/WatchContentView.swift */,
-				A20000032900000100000001 /* Motion/MotionManager.swift */,
-				A20000042900000100000001 /* Motion/ShotDetector.swift */,
-				A20000052900000100000001 /* Connectivity/WatchSessionManager.swift */,
+				A20000022900000100000001 /* WatchContentView.swift */,
+				A20000032900000100000001 /* MotionManager.swift */,
+				A20000042900000100000001 /* ShotDetector.swift */,
+				A20000052900000100000001 /* WatchSessionManager.swift */,
 				A20000062900000100000001 /* Info.plist */,
 			);
 			path = ArcheryWatchApp;
@@ -292,7 +292,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2700;
+				LastUpgradeCheck = 1510;
 				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					331C8080294A63A400263BE5 = {
@@ -377,13 +377,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -470,10 +466,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				A20000112900000100000001 /* ArcheryWatchApp.swift in Sources */,
-				A20000122900000100000001 /* Views/WatchContentView.swift in Sources */,
-				A20000132900000100000001 /* Motion/MotionManager.swift in Sources */,
-				A20000142900000100000001 /* Motion/ShotDetector.swift in Sources */,
-				A20000152900000100000001 /* Connectivity/WatchSessionManager.swift in Sources */,
+				A20000122900000100000001 /* WatchContentView.swift in Sources */,
+				A20000132900000100000001 /* MotionManager.swift in Sources */,
+				A20000142900000100000001 /* ShotDetector.swift in Sources */,
+				A20000152900000100000001 /* WatchSessionManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -822,11 +818,12 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
 			name = Debug;
 		};
@@ -848,9 +845,10 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
 			name = Release;
 		};
@@ -872,9 +870,10 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				WATCHOS_DEPLOYMENT_TARGET = 9.0;
 			};
 			name = Profile;
 		};

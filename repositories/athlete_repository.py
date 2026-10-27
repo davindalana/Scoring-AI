@@ -17,6 +17,6 @@ async def get_athlete_by_code(athlete_code: str) -> Optional[Dict[str, Any]]:
     return await execute_query(sql, (athlete_code,), fetch_one=True)
 
 
-async def list_athletes(limit: int = 50) -> List[Dict[str, Any]]:
-    sql = "SELECT id, name, athlete_code, created_at FROM athletes ORDER BY name ASC LIMIT %s"
+async def list_athletes(limit: int = 200) -> List[Dict[str, Any]]:
+    sql = "SELECT id, name, athlete_code, created_at FROM athletes ORDER BY id DESC LIMIT %s"
     return await execute_query(sql, (limit,))

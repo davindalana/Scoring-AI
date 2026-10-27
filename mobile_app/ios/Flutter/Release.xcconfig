@@ -1,2 +1,7 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"
 #include "Generated.xcconfig"
+OTHER_LDFLAGS = $(inherited) -Wl,-w
+ENABLE_MODULE_VERIFIER = NO
+MODULE_VERIFIER_SUPPORTED_LANGUAGES =
+MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS =
+LIBRARY_SEARCH_PATHS = $(inherited)

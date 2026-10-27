@@ -85,19 +85,34 @@ struct WatchContentView: View {
                     .cornerRadius(8)
                 }
 
-                // Manual Shot Button
-                Button(action: {
-                    motionManager.recordManualShot()
-                }) {
-                    HStack {
-                        Image(systemName: "plus.circle")
-                        Text("Tembak Manual")
+                // Action Buttons: Manual Shot & Reset
+                HStack(spacing: 6) {
+                    Button(action: {
+                        motionManager.recordManualShot()
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus.circle")
+                            Text("Manual")
+                        }
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.white)
                     }
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.white)
+                    .background(Color.white.opacity(0.15))
+                    .cornerRadius(8)
+
+                    Button(action: {
+                        motionManager.resetShotCount()
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text("Reset")
+                        }
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.red)
+                    }
+                    .background(Color.red.opacity(0.2))
+                    .cornerRadius(8)
                 }
-                .background(Color.gray.opacity(0.3))
-                .cornerRadius(8)
             }
             .padding(.horizontal, 4)
         }

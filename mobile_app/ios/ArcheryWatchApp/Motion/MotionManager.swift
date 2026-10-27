@@ -83,6 +83,16 @@ public class MotionManager: NSObject, ObservableObject, HKWorkoutSessionDelegate
         }
     }
 
+    /// Reset shot count and candidate detector state during active session
+    public func resetShotCount() {
+        DispatchQueue.main.async {
+            self.detectedShotsCount = 0
+            self.lastDetectedShot = nil
+            self.detector.reset()
+            WKInterfaceDevice.current().play(.notification)
+        }
+    }
+
     /// Stop motion recording and end workout session
     public func stopSession() {
         guard isRecording else { return }

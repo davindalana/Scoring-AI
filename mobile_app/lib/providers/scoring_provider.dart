@@ -9,6 +9,7 @@ import '../data/models/shot_event.dart';
 import '../data/services/api_service.dart';
 import '../data/services/local_storage_service.dart';
 import '../data/services/offline_scoring_engine.dart';
+import '../data/services/offline_target_detector.dart';
 import '../data/services/watch_connectivity_service.dart';
 
 class ScoringProvider extends ChangeNotifier {
@@ -687,16 +688,30 @@ class ScoringProvider extends ChangeNotifier {
     }
   }
 
-  // AI Target Scan
+  // AI Target Scan (Runs 100% On-Device Offline, with optional server fallback)
   Future<Map<String, dynamic>> scanTargetImage(File image) async {
     if (_currentSession == null) throw Exception('No active session');
-    if (_isOfflineMode) {
-      throw Exception('AI Target Scan requires server connectivity. Please use manual scoring or switch online.');
+
+    final expectedCount = _currentSession!.arrowsPerEnd;
+
+    // 1. If online mode is explicitly active, try server ML first
+    if (!_isOfflineMode) {
+      try {
+        return await apiService.detectTargetImage(
+          sessionId: _currentSession!.id,
+          imageFile: image,
+        );
+      } catch (e) {
+        debugPrint('Online scan failed ($e), falling back to on-device offline AI detector');
+      }
     }
-    return await apiService.detectTargetImage(
-      sessionId: _currentSession!.id,
-      imageFile: image,
+
+    // 2. On-Device Offline AI Target & Arrow Detector (Pure Dart, Zero Network)
+    final result = await OfflineTargetDetector.detectFromImageFile(
+      image,
+      expectedArrowCount: expectedCount,
     );
+    return result.toJson();
   }
 
   void applyAiScores(List<ArrowScore> detectedArrows) {

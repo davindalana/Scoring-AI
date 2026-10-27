@@ -130,7 +130,7 @@ public class WatchBridgeManager: NSObject, WCSessionDelegate, FlutterStreamHandl
         message["action"] = action
 
         if WCSession.default.isReachable {
-            WCSession.default.sendMessage(message, replyHandler: nil) { [weak self] _ in
+            WCSession.default.sendMessage(message, replyHandler: nil) { _ in
                 // Fallback to updateApplicationContext
                 try? WCSession.default.updateApplicationContext(message)
             }

@@ -112,36 +112,100 @@ class ArcheryTargetDetector:
         # 3. Fallback to image center if no circle found
         return (float(w / 2), float(h / 2)), float(min(w, h) * 0.42)
 
+    def calculate_angle(self, p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
+        """Calculates angle in degrees between two points (from AkhilRai28/Arrow-Detection)."""
+        return math.atan2(p1[1] - p2[1], p1[0] - p2[0]) * 180.0 / math.pi
+
+    def identify_arrow_tip(
+        self,
+        approx: np.ndarray,
+        hull_indices: np.ndarray,
+        target_center: Tuple[float, float],
+    ) -> Optional[Tuple[float, float]]:
+        """
+        Identifies the exact impact tip vertex of an arrow using polygon approximation
+        and Convex Hull geometry from AkhilRai28/Arrow-Detection.
+        Prioritizes the vertex penetrating closest to the target bullseye center.
+        """
+        pts = [tuple(p[0]) for p in approx]
+        if len(pts) < 3:
+            return None
+
+        # Vertices in approx that are not in convex hull or are sharp extrema
+        hull_set = set(int(h[0]) if hasattr(h, '__len__') else int(h) for h in hull_indices)
+        interior_indices = [i for i in range(len(pts)) if i not in hull_set]
+
+        # Check for chevron / arrowhead tip vertex
+        if interior_indices:
+            # The tip is typically the sharp inward vertex of the shaft/nock or closest to center
+            interior_pts = [pts[i] for i in interior_indices]
+            best_tip = min(
+                interior_pts,
+                key=lambda p: (p[0] - target_center[0]) ** 2 + (p[1] - target_center[1]) ** 2,
+            )
+            return float(best_tip[0]), float(best_tip[1])
+
+        # If no concave vertex found, pick vertex closest to target center
+        closest_pt = min(
+            pts,
+            key=lambda p: (p[0] - target_center[0]) ** 2 + (p[1] - target_center[1]) ** 2,
+        )
+        return float(closest_pt[0]), float(closest_pt[1])
+
     def detect_arrow_points(
         self,
         image: np.ndarray,
         center: Tuple[float, float],
         radius: float,
         max_arrows: int = 6,
-    ) -> List[Tuple[float, float, float]]:
+    ) -> List[Tuple[float, float, float, float]]:
         """
-        Finds arrow impact positions / shafts using edge/contrast detection.
-        Returns list of (x, y, confidence).
+        Enhanced Arrow Detection based on AkhilRai28/Arrow-Detection:
+        - 7x7 Gaussian Blur
+        - Canny Edge Detection (50, 150)
+        - 3x3 Morphological Closing (2 iterations) to bridge shaft gaps
+        - Contour tree extraction with approxPolyDP polygon approximation
+        - Convex Hull analysis to localize exact arrow entry tip & shaft angle.
+        Returns list of (x, y, confidence, angle_deg).
         """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        edges = cv2.Canny(blurred, 60, 150)
+        blurred = cv2.GaussianBlur(gray, (7, 7), 0)
+        edges = cv2.Canny(blurred, 50, 150)
+
+        # Morphological Closing: bridges gaps in arrow shaft contours
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        closed_edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel, iterations=2)
 
         # Mask within target area + 10% margin
         mask = np.zeros_like(gray)
         cv2.circle(mask, (int(center[0]), int(center[1])), int(radius * 1.1), 255, -1)
-        edges = cv2.bitwise_and(edges, edges, mask=mask)
+        masked_edges = cv2.bitwise_and(closed_edges, closed_edges, mask=mask)
 
-        contours, _ = cv2.findContours(edges, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(masked_edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         candidates = []
+
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if 5 < area < 500:
-                ((x, y), r) = cv2.minEnclosingCircle(cnt)
-                # Keep points inside target radius
-                dist = math.sqrt((x - center[0]) ** 2 + (y - center[1]) ** 2)
+            if 15 < area < 1500:
+                # Polygonal approximation (Ramer-Douglas-Peucker)
+                epsilon = 0.02 * cv2.arcLength(cnt, True)
+                approx = cv2.approxPolyDP(cnt, epsilon, True)
+                hull_indices = cv2.convexHull(approx, returnPoints=False)
+
+                tip = None
+                if hull_indices is not None and len(approx) >= 3:
+                    tip = self.identify_arrow_tip(approx, hull_indices, center)
+
+                if tip is not None:
+                    tx, ty = tip
+                else:
+                    ((tx, ty), _) = cv2.minEnclosingCircle(cnt)
+
+                dist = math.sqrt((tx - center[0]) ** 2 + (ty - center[1]) ** 2)
                 if dist <= radius * 1.05:
-                    candidates.append((float(x), float(y), 0.75))
+                    angle = self.calculate_angle((tx, ty), center)
+                    confidence = 0.82 if len(approx) >= 5 else 0.72
+                    candidates.append((float(tx), float(ty), confidence, angle))
 
         # Cluster nearby points so 1 arrow = 1 impact detection
         merged_points = []
@@ -151,11 +215,11 @@ class ArcheryTargetDetector:
             for i, m in enumerate(merged_points):
                 d = math.sqrt((pt[0] - m[0]) ** 2 + (pt[1] - m[1]) ** 2)
                 if d < cluster_threshold:
-                    # Average position
                     merged_points[i] = (
                         (m[0] + pt[0]) / 2,
                         (m[1] + pt[1]) / 2,
                         max(m[2], pt[2]),
+                        m[3],
                     )
                     merged = True
                     break
@@ -205,6 +269,7 @@ class ArcheryTargetDetector:
                     "confidence": confidence,
                     "x": round(pt[0], 1),
                     "y": round(pt[1], 1),
+                    "angle_deg": round(pt[3], 1) if len(pt) > 3 else 0.0,
                     "source": "ai",
                 })
             else:
