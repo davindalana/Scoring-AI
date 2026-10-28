@@ -1,0 +1,8 @@
+{
+  "name": "Archery Score Pro",
+  "description": "Professional Olympic archery scoring application featuring interactive target visualizer, tactile keypad, scorecard tracking, analytics, and target detection.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

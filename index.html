@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var currentFetch = window.fetch ? window.fetch.bind(window) : undefined;
+          var desc =
+            Object.getOwnPropertyDescriptor(window, 'fetch') ||
+            Object.getOwnPropertyDescriptor(Window.prototype, 'fetch');
+          if (desc && desc.configurable && !desc.writable && !desc.set) {
+            Object.defineProperty(window, 'fetch', {
+              configurable: true,
+              enumerable: true,
+              get: function () {
+                return currentFetch;
+              },
+              set: function (fn) {
+                if (typeof fn === 'function') {
+                  currentFetch = fn;
+                }
+              },
+            });
+          }
+        } catch (_) {}
+
+        window.addEventListener(
+          'error',
+          function (e) {
+            if (
+              (e && e.filename && e.filename.indexOf('chrome-extension://') === 0) ||
+              (e && e.message && e.message.indexOf('Cannot set property fetch') !== -1)
+            ) {
+              e.stopImmediatePropagation();
+              e.preventDefault();
+              return false;
+            }
+          },
+          true
+        );
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Archery Score Pro</title>
+    <meta name="description" content="Professional Olympic archery scoring application featuring interactive target visualizer, tactile keypad, scorecard tracking, analytics, and target detection." />
+    <meta property="og:title" content="Archery Score Pro" />
+    <meta property="og:description" content="Professional Olympic archery scoring application featuring interactive target visualizer, tactile keypad, scorecard tracking, analytics, and target detection." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
