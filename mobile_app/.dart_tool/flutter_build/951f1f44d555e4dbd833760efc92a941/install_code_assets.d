@@ -1,0 +1,1 @@
+ /Users/davindalana/Documents/Project/Scoring\ AI/mobile_app/.dart_tool/flutter_build/951f1f44d555e4dbd833760efc92a941/native_assets.json: 
